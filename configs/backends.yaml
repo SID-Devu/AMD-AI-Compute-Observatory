@@ -1,0 +1,84 @@
+# Backend Configuration
+# Execution provider settings for AACO
+
+backends:
+  # AMD MIGraphX Execution Provider (recommended for AMD GPUs)
+  migraphx:
+    provider: MIGraphXExecutionProvider
+    options:
+      device_id: 0
+      fp16_enable: false
+      int8_enable: false
+      exhaustive_tune: false
+    description: AMD MIGraphX for Instinct/Radeon GPUs
+    
+  # AMD MIGraphX with FP16
+  migraphx_fp16:
+    provider: MIGraphXExecutionProvider
+    options:
+      device_id: 0
+      fp16_enable: true
+      int8_enable: false
+    description: MIGraphX with FP16 precision
+    
+  # AMD ROCm Execution Provider (HIP-based)
+  rocm:
+    provider: ROCMExecutionProvider
+    options:
+      device_id: 0
+      miopen_conv_exhaustive_search: false
+      gpu_mem_limit: 0
+    description: ROCm/HIP execution provider
+    
+  # NVIDIA CUDA Execution Provider
+  cuda:
+    provider: CUDAExecutionProvider
+    options:
+      device_id: 0
+      cudnn_conv_algo_search: EXHAUSTIVE
+      gpu_mem_limit: 0
+    description: NVIDIA CUDA execution provider
+    
+  # NVIDIA TensorRT Execution Provider
+  tensorrt:
+    provider: TensorrtExecutionProvider
+    options:
+      device_id: 0
+      trt_fp16_enable: false
+      trt_int8_enable: false
+    description: NVIDIA TensorRT for optimized inference
+    
+  # CPU Execution Provider
+  cpu:
+    provider: CPUExecutionProvider
+    options:
+      intra_op_num_threads: 0
+      inter_op_num_threads: 0
+    description: CPU-only execution (reference baseline)
+    
+  # OpenVINO Execution Provider
+  openvino:
+    provider: OpenVINOExecutionProvider
+    options:
+      device_type: GPU
+      precision: FP32
+    description: Intel OpenVINO execution provider
+
+# Provider priority order
+provider_priority:
+  - MIGraphXExecutionProvider
+  - ROCMExecutionProvider
+  - CUDAExecutionProvider
+  - TensorrtExecutionProvider
+  - OpenVINOExecutionProvider
+  - CPUExecutionProvider
+
+# Default backend per platform
+platform_defaults:
+  linux_amd: migraphx
+  linux_nvidia: cuda
+  linux_intel: openvino
+  windows_amd: rocm
+  windows_nvidia: cuda
+  windows_intel: openvino
+  darwin: cpu
