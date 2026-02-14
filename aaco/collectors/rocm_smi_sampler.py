@@ -65,16 +65,18 @@ class ROCmSMISampler:
         """Get GPU information from rocm-smi."""
         if not self._available:
             return None
-        
-        result = run_command(["rocm-smi", "-d", str(self.device_id), "--showproductname", "--showmeminfo", "vram"])
+
+        result = run_command(
+            ["rocm-smi", "-d", str(self.device_id), "--showproductname", "--showmeminfo", "vram"]
+        )
         if not result:
             return None
-        
+
         info = {
             "name": "AMD GPU",
             "vram_total_mb": 0,
         }
-        
+
         for line in result.split("\n"):
             if "Card series" in line or "GPU" in line:
                 parts = line.split(":")
@@ -89,7 +91,7 @@ class ROCmSMISampler:
                         info["vram_total_mb"] = val // (1024 * 1024)
                     else:
                         info["vram_total_mb"] = val
-        
+
         return info
 
     @property
