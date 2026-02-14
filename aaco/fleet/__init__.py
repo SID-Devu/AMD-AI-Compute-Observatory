@@ -1,8 +1,11 @@
 """
-AACO-SIGMA Fleet Mode Platform
+AACO-Ω∞ Fleet Mode Platform
 
-Manages performance profiling across GPU fleets.
-Enables cross-system analysis and comparison.
+Manages performance profiling across GPU fleets with:
+- Cross-system analysis and comparison
+- Fleet-wide trend analytics
+- Regression heatmaps
+- Hardware health scoring
 """
 
 from .fleet_manager import (
@@ -29,6 +32,18 @@ from .health_monitor import (
     HealthAlert,
 )
 
+# AACO-Ω∞ Fleet Performance Ops
+from .fleet_ops import (
+    FleetHealthLevel,
+    SessionRecord,
+    TrendPoint,
+    MetricTrend,
+    RegressionHeatmapCell,
+    FleetHealthReport,
+    FleetPerformanceOps,
+    create_fleet_ops,
+)
+
 __all__ = [
     # Fleet Manager
     "FleetManager",
@@ -49,4 +64,13 @@ __all__ = [
     "NodeHealth",
     "HealthStatus",
     "HealthAlert",
+    # AACO-Ω∞ Fleet Ops
+    "FleetHealthLevel",
+    "SessionRecord",
+    "TrendPoint",
+    "MetricTrend",
+    "RegressionHeatmapCell",
+    "FleetHealthReport",
+    "FleetPerformanceOps",
+    "create_fleet_ops",
 ]

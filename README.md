@@ -2,12 +2,13 @@
 
 # 🔬 AMD AI Compute Observatory
 
-### **AACO-SIGMA** | Model-to-Metal Performance Engineering Platform
+### **AACO-Ω∞** | Model-to-Metal Performance Science & Governance Engine
 
 <img src="https://img.shields.io/badge/AMD-ED1C24?style=for-the-badge&logo=amd&logoColor=white" alt="AMD"/>
 <img src="https://img.shields.io/badge/ROCm-6.0+-ED1C24?style=for-the-badge&logo=amd&logoColor=white" alt="ROCm"/>
 <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
 <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
+<img src="https://img.shields.io/badge/Version-4.0.0-blue?style=for-the-badge" alt="Version"/>
 
 <br/>
 
@@ -18,9 +19,9 @@
 
 <br/>
 
-**🚀 The ONLY end-to-end performance observability platform for AMD Instinct GPUs**
+**🧬 A deterministic, self-calibrating, cross-layer AI performance laboratory**
 
-**From ONNX graph nodes → MIGraphX kernels → rocprof traces → eBPF scheduler events → actionable insights**
+**From ONNX graph → MIGraphX partitions → HIP kernels → Hardware counters → Statistical governance → Root cause**
 
 <br/>
 
@@ -32,7 +33,9 @@
 
 <div align="center">
 
-## 💎 Why AACO-SIGMA?
+## 💎 Why AACO-Ω∞?
+
+### **This is not profiling. This is Performance Science.**
 
 </div>
 
@@ -40,28 +43,29 @@
 <tr>
 <td width="50%">
 
-### ❌ Without AACO
+### ❌ Traditional Profiling
 ```
 ❓ "Model is slow, but why?"
 ❓ "Is it GPU, CPU, or memory?"
 ❓ "Did that change cause regression?"
-❓ "What should I optimize first?"
+❓ "How do I reproduce this measurement?"
 ```
 
-**Result:** Weeks of trial-and-error debugging
+**Result:** Inconsistent measurements, guesswork, weeks of debugging
 
 </td>
 <td width="50%">
 
-### ✅ With AACO-SIGMA
+### ✅ AACO-Ω∞ Performance Science
 ```
-✓ Automated bottleneck classification
-✓ Evidence-based root cause analysis
-✓ Kernel-to-ONNX-node attribution
-✓ Prioritized optimization roadmap
+✓ Deterministic laboratory execution
+✓ Hardware-calibrated digital twin
+✓ Bayesian root cause with posteriors
+✓ Statistical drift detection (EWMA/CUSUM)
+✓ Closed-loop auto-optimization
 ```
 
-**Result:** Performance truth in minutes
+**Result:** Scientific measurement, reproducible truth, automated governance
 
 </td>
 </tr>
@@ -69,20 +73,21 @@
 
 <div align="center">
 
-### ⚡ AACO-SIGMA answers the questions that matter
+### ⚡ AACO-Ω∞ delivers scientific answers
 
 </div>
 
-| 🎯 Question | 📊 AACO Delivers | 🔍 Evidence |
-|-------------|------------------|-------------|
-| **Where did the time go?** | Kernel scheduling vs GPU kernels vs memory stalls | Timeline attribution + flame graphs |
-| **Why did latency regress?** | Driver changes, bandwidth saturation, launch overhead | Diff analysis + confidence scores |
-| **What is the bottleneck?** | Memory-bound / Compute-bound / Launch-bound | ML classifier + rule engine |
-| **What should I fix first?** | Ranked optimization targets | ROI-weighted recommendations |
+| 🎯 Question | 📊 AACO-Ω∞ Delivers | 🔍 Method |
+|-------------|---------------------|-----------|
+| **Is this measurement reproducible?** | Deterministic Laboratory Mode | cgroups v2 isolation, CPU pinning, GPU clock lock |
+| **What % of theoretical peak?** | Hardware Envelope Utilization (HEU) | Microbenchmark calibration + ceiling analysis |
+| **Why did latency regress?** | Root Cause Posterior Probability (RCPP) | Bayesian inference with evidence-based ranking |
+| **Is this drift statistically significant?** | Robust statistical governance | EWMA + CUSUM with median/MAD baseline |
+| **Which kernels map to which ops?** | Graph→Partition→Kernel attribution | KAR, PFI, LTS metrics with confidence |
 
 <div align="center">
 
-### 🏆 This is not benchmarking. This is **Performance Truth Infrastructure.**
+### 🏆 This is not benchmarking. This is **Performance Science Infrastructure.**
 
 </div>
 
@@ -92,62 +97,54 @@
 
 ## 🏗️ Architecture
 
-### The 12 Pillars of AACO-SIGMA
+### The 10 Pillars of AACO-Ω∞
 
 </div>
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                         AACO-SIGMA: 12-Pillar Architecture                          │
+│                    AACO-Ω∞: 10-Pillar Performance Science Architecture              │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────────────┐   │
-│  │                        🎯 APPLICATION LAYER                                  │   │
-│  │   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐    │   │
-│  │   │  Dashboard  │   │   CLI       │   │  Reports    │   │   REST API  │    │   │
-│  │   │  (Streamlit)│   │  (Rich TUI) │   │  (HTML/PDF) │   │   (FastAPI) │    │   │
-│  │   └─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘    │   │
+│  │                    🎯 GOVERNANCE LAYER (Pillars 7-10)                        │   │
+│  │                                                                              │   │
+│  │   P7: Statistical        P8: Bayesian        P9: Auto-         P10: Fleet   │   │
+│  │   Regression             Root Cause          Optimization      Performance  │   │
+│  │   Governance             Engine              Engine            Ops          │   │
+│  │   ┌──────────┐           ┌──────────┐        ┌──────────┐      ┌──────────┐│   │
+│  │   │EWMA/CUSUM│           │Posterior │        │Hypothesis│      │Multi-Sess││   │
+│  │   │Drift Det │           │Ranking   │        │Testing   │      │Trending  ││   │
+│  │   │Robust BL │           │RCPP Score│        │Rollback  │      │Heatmaps  ││   │
+│  │   └──────────┘           └──────────┘        └──────────┘      └──────────┘│   │
 │  └─────────────────────────────────────────────────────────────────────────────┘   │
 │                                         │                                           │
 │  ┌─────────────────────────────────────────────────────────────────────────────┐   │
-│  │                     🧠 INTELLIGENCE LAYER (6 Pillars)                        │   │
+│  │                    🧠 INTELLIGENCE LAYER (Pillars 3-6)                       │   │
 │  │                                                                              │   │
-│  │   P1: Kernel         P2: Performance      P3: Root-Cause    P4: Compiler   │   │
-│  │   Fingerprint        Envelope             Forensics         Insight        │   │
-│  │   Family (KFF)       Modeler              Engine            Tracker        │   │
-│  │   ┌─────────┐        ┌─────────┐          ┌─────────┐       ┌─────────┐    │   │
-│  │   │ GEMM/   │        │Roofline │          │ Causal  │       │ IR/AST  │    │   │
-│  │   │ Conv/   │        │ Model + │          │Analysis │       │ Fusion  │    │   │
-│  │   │ Reduce  │        │Envelope │          │+ Blame  │       │ Tracker │    │   │
-│  │   └─────────┘        └─────────┘          └─────────┘       └─────────┘    │   │
-│  │                                                                              │   │
-│  │   P5: Regression     P6: Automated                                          │   │
-│  │   Governance         Optimization                                           │   │
-│  │   ┌─────────┐        ┌─────────┐                                            │   │
-│  │   │Baseline │        │AutoTune │                                            │   │
-│  │   │ + SLA   │        │+ CodeGen│                                            │   │
-│  │   │ Guard   │        │ Engine  │                                            │   │
-│  │   └─────────┘        └─────────┘                                            │   │
+│  │   P3: GPU Counter-       P4: Probabilistic   P5: Hardware-     P6: Unified  │   │
+│  │   Calibrated KFF         Attribution         Calibrated        Trace Lake   │   │
+│  │   ┌──────────┐           ┌──────────┐        Digital Twin      ┌──────────┐│   │
+│  │   │Family    │           │KAR/PFI/  │        ┌──────────┐      │Perfetto  ││   │
+│  │   │Classify  │           │LTS Scores│        │HEU Score │      │Compat    ││   │
+│  │   │Counter   │           │Graph→    │        │Microbench│      │Cross-    ││   │
+│  │   │Signature │           │Kernel Map│        │Calibrate │      │Layer     ││   │
+│  │   └──────────┘           └──────────┘        └──────────┘      └──────────┘│   │
 │  └─────────────────────────────────────────────────────────────────────────────┘   │
 │                                         │                                           │
 │  ┌─────────────────────────────────────────────────────────────────────────────┐   │
-│  │                     📊 DATA LAYER (4 Pillars)                                │   │
+│  │                    🔬 DETERMINISM LAYER (Pillars 1-2)                        │   │
 │  │                                                                              │   │
-│  │   P7: TraceLake      P8: Isolation        P9: Fleet          P10: LLM      │   │
-│  │   (Unified Store)    Capsule              Analytics          Profiler      │   │
-│  │   ┌─────────┐        ┌─────────┐          ┌─────────┐        ┌─────────┐   │   │
-│  │   │Parquet +│        │Noise    │          │Multi-GPU│        │Token/s  │   │   │
-│  │   │Perfetto │        │Sentinel │          │Cluster  │        │TTFT/TPS │   │   │
-│  │   │ Lake    │        │ Guard   │          │ Metrics │        │ Curves  │   │   │
-│  │   └─────────┘        └─────────┘          └─────────┘        └─────────┘   │   │
+│  │   P1: Laboratory Mode                      P2: eBPF Forensic Scheduler      │   │
+│  │   ┌────────────────────────────┐           ┌────────────────────────────┐   │   │
+│  │   │ cgroups v2 | CPU isolate  │           │ Scheduler Interference     │   │   │
+│  │   │ NUMA pin  | GPU clock lock │           │ Index (SII) + FPI + CNE    │   │   │
+│  │   │ IRQ affinity | Process cage│           │ Context switches + wait    │   │   │
+│  │   └────────────────────────────┘           └────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────────────────────────────┘   │
-│                                         │                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐   │
-│  │                     🔧 COLLECTION LAYER (2 Pillars)                          │   │
-│  │                                                                              │   │
-│  │   P11: Hardware Collectors              P12: OS Collectors                  │   │
-│  │   ┌────────────────────────┐            ┌────────────────────────┐          │   │
-│  │   │ rocprof │ rocm-smi    │            │ eBPF │ Kernel Module   │          │   │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
 │  │   │ Traces  │ Telemetry   │            │(sched)│ (GPU memory)   │          │   │
 │  │   └────────────────────────┘            └────────────────────────┘          │   │
 │  └─────────────────────────────────────────────────────────────────────────────┘   │
@@ -157,28 +154,46 @@
 
 <div align="center">
 
-### 🔗 Data Flow: Model → Metal → Insights
+### 🔗 Scientific Data Flow: Model → Metal → Diagnosis → Action
 
 </div>
 
 ```
-   ONNX Model          ROCm Stack              Kernel Space           Analysis
-   ──────────          ──────────              ────────────           ────────
-       │                    │                       │                     │
-       ▼                    ▼                       ▼                     ▼
-  ┌─────────┐         ┌─────────┐            ┌─────────┐           ┌─────────┐
-  │  Graph  │         │MIGraphX │            │  eBPF   │           │ Unified │
-  │Extractor│────────▶│ Kernels │───────────▶│ Probes  │──────────▶│Timeline │
-  └─────────┘         └─────────┘            └─────────┘           └─────────┘
-       │                    │                       │                     │
-       │                    │                       │                     │
-       ▼                    ▼                       ▼                     ▼
-  ┌─────────┐         ┌─────────┐            ┌─────────┐           ┌─────────┐
-  │ Node →  │         │ Kernel  │            │ Sched + │           │Evidence │
-  │ Kernel  │         │ Metrics │            │  Memory │           │ + Root  │
-  │Mapping  │         │   HPC   │            │ Events  │           │  Cause  │
-  └─────────┘         └─────────┘            └─────────┘           └─────────┘
+   ONNX Model          Laboratory          Digital Twin        Governance
+   ──────────          ──────────          ────────────        ──────────
+       │                    │                   │                   │
+       ▼                    ▼                   ▼                   ▼
+  ┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐
+  │  Graph  │         │Determin-│         │  HEU    │         │ EWMA/   │
+  │Partition│────────▶│istic    │────────▶│Scoring  │────────▶│ CUSUM   │
+  │   Map   │         │Execution│         │Envelope │         │Governance│
+  └─────────┘         └─────────┘         └─────────┘         └─────────┘
+       │                    │                   │                   │
+       ▼                    ▼                   ▼                   ▼
+  ┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐
+  │KAR/PFI/ │         │  eBPF   │         │Bayesian │         │  Auto-  │
+  │  LTS    │         │Forensics│         │Root Cause│        │Optimize │
+  │ Scores  │         │SII/FPI  │         │  RCPP   │         │Rollback │
+  └─────────┘         └─────────┘         └─────────┘         └─────────┘
 ```
+
+---
+
+<div align="center">
+
+## 📐 AACO-Ω∞ Scientific Metrics
+
+</div>
+
+| 🎯 Metric | 📊 Formula | 🔍 Purpose |
+|-----------|------------|------------|
+| **KAR** (Kernel Amplification Ratio) | `GPU_kernels / ONNX_nodes` | Measure kernel explosion |
+| **PFI** (Partition Fragmentation Index) | `partitions / nodes` | Graph partitioning quality |
+| **LTS** (Launch Tax Score) | `(launch_overhead / kernel_time) × weight` | CPU→GPU sync cost |
+| **SII** (Scheduler Interference Index) | `runqueue_wait / wall_time` | OS scheduling impact |
+| **HEU** (Hardware Envelope Utilization) | `actual_perf / calibrated_ceiling` | Peak utilization % |
+| **CHI** (Compute Health Index) | `weighted(memory, compute, launch, thermal)` | Overall health score |
+| **RCPP** (Root Cause Posterior Prob) | `P(cause\|evidence)` | Bayesian diagnosis confidence |
 
 ---
 
@@ -547,26 +562,28 @@ backends:
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                    AACO-SIGMA Performance Report                             ║
+║                    AACO-Ω∞ Performance Science Report                        ║
 ║                    Model: ResNet-50 | Backend: MIGraphX                      ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║  SUMMARY                                                                     ║
-║  ├─ Mean Latency:      4.23ms (±0.12ms)                                     ║
+║  ├─ Mean Latency:      4.23ms (±0.12ms) [σ from robust baseline]            ║
 ║  ├─ P99 Latency:       4.67ms                                               ║
 ║  ├─ Throughput:        236.4 img/s                                          ║
-║  └─ GPU Utilization:   94.2%                                                ║
+║  └─ HEU Score:         87.3% (Hardware Envelope Utilization)                ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║  BOTTLENECK ANALYSIS                                                         ║
-║  ├─ Classification:    ✅ COMPUTE-BOUND (Optimal)                           ║
-║  ├─ Confidence:        0.91                                                  ║
-║  ├─ Launch Tax:        0.12 (Healthy)                                       ║
-║  └─ KAR:               1.3 (Excellent fusion)                               ║
+║  ATTRIBUTION METRICS                                                         ║
+║  ├─ KAR:               1.3 (Excellent kernel fusion)                        ║
+║  ├─ PFI:               0.2 (Good partitioning)                              ║
+║  ├─ LTS:               0.12 (Minimal launch tax)                            ║
+║  └─ SII:               0.08 (Low scheduler interference)                    ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║  TOP KERNELS BY TIME                                                         ║
-║  1. GEMM_fp16         38.2%  ████████████████░░░░░░░░░░░░░                  ║
-║  2. Conv2D_nhwc       31.4%  █████████████░░░░░░░░░░░░░░░░░                  ║
-║  3. BatchNorm         12.1%  █████░░░░░░░░░░░░░░░░░░░░░░░░░                  ║
-║  4. ReLU               8.3%  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░                  ║
+║  GOVERNANCE STATUS                                                           ║
+║  ├─ Drift Detection:   ✅ STABLE (EWMA within bounds)                       ║
+║  ├─ CUSUM:             ✅ NO CHANGE POINT                                   ║
+║  └─ Baseline Dev:      +0.8σ (Normal variation)                             ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  ROOT CAUSE (if degraded)                                                    ║
+║  ├─ Top RCPP:          N/A (No regression detected)                         ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -667,7 +684,7 @@ Built with insights from:
 
 ## ⭐ Star History
 
-If you find AACO-SIGMA useful, please consider giving it a star!
+If you find AACO-Ω∞ useful, please consider giving it a star!
 
 [![Star History Chart](https://api.star-history.com/svg?repos=SID-Devu/AMD-AI-Compute-Observatory&type=Date)](https://star-history.com/#SID-Devu/AMD-AI-Compute-Observatory&Date)
 
@@ -679,18 +696,20 @@ If you find AACO-SIGMA useful, please consider giving it a star!
 
 <img src="https://img.shields.io/badge/AMD-ED1C24?style=for-the-badge&logo=amd&logoColor=white" alt="AMD"/>
 
-### **AACO-SIGMA**
-#### Model-to-Metal Performance Engineering Platform
+### **AACO-Ω∞**
+#### Model-to-Metal Performance Science & Governance Engine
 
 <br/>
 
-**🏆 The most comprehensive GPU performance observability platform for AMD Instinct**
+**🧬 The most scientifically rigorous GPU performance platform for AMD Instinct**
 
 <br/>
 
 *"Most engineers can run a model. Some can profile.*
-*Very few can instrument kernel + GPU + analytics and produce a diagnosis.*
-*AACO-SIGMA does it automatically."*
+*Very few can implement deterministic laboratory execution,*
+*hardware-calibrated digital twins, Bayesian root cause analysis,*
+*and statistical regression governance.*
+*AACO-Ω∞ does it automatically."*
 
 <br/>
 

@@ -1,8 +1,8 @@
 """
-AACO-SIGMA Regression Governance RG++
+AACO-Ω∞ Governance Module
 
-Automated performance regression detection, SLA enforcement,
-and CI/CD integration for continuous performance governance.
+Statistical regression detection, Bayesian root cause analysis,
+and performance governance for continuous optimization.
 """
 
 from .regression_detector import (
@@ -34,6 +34,28 @@ from .ci_integration import (
     PipelineConfig,
 )
 
+# AACO-Ω∞ Enhanced Governance
+from .regression_governor import (
+    DriftDirection,
+    RobustBaseline,
+    EWMAState,
+    CUSUMState,
+    RegressionVerdict,
+    RegressionGovernor,
+    create_regression_governor,
+)
+
+from .bayesian_engine import (
+    RootCauseCategory,
+    Evidence,
+    RootCausePrior,
+    RootCausePosterior,
+    RootCauseAnalysis,
+    BayesianRootCauseEngine,
+    create_root_cause_evidence,
+    create_bayesian_engine,
+)
+
 __all__ = [
     # Regression detection
     "RegressionDetector",
@@ -59,4 +81,23 @@ __all__ = [
     "CIPipelineResult",
     "GateDecision",
     "PipelineConfig",
+    
+    # AACO-Ω∞ Regression Governor
+    "DriftDirection",
+    "RobustBaseline",
+    "EWMAState",
+    "CUSUMState",
+    "RegressionVerdict",
+    "RegressionGovernor",
+    "create_regression_governor",
+    
+    # AACO-Ω∞ Bayesian Root Cause
+    "RootCauseCategory",
+    "Evidence",
+    "RootCausePrior",
+    "RootCausePosterior",
+    "RootCauseAnalysis",
+    "BayesianRootCauseEngine",
+    "create_root_cause_evidence",
+    "create_bayesian_engine",
 ]

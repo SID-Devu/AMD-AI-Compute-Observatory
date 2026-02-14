@@ -1,7 +1,11 @@
 """
-AACO-SIGMA ROCm Plane KFF++ (Kernel Fingerprint Framework Enhanced)
+AACO-Ω∞ ROCm Plane KFF++ (Kernel Fingerprint Framework Enhanced)
 
-Advanced kernel identification, fingerprinting, and family classification.
+Advanced kernel identification, fingerprinting, and family classification with:
+- Dual-mode rocprof integration (v1/v2)
+- Duration distribution vectors
+- Hardware counter signatures
+- Family clustering and drift detection
 """
 
 from .kernel_fingerprint import (
@@ -34,6 +38,25 @@ from .family_classifier import (
     FamilyHeuristics,
 )
 
+# AACO-Ω∞ Advanced Fingerprinting
+from .advanced_fingerprint import (
+    DurationDistribution,
+    GridSignature,
+    CounterSignature,
+    KernelFamilyCluster,
+    KernelFamilyClassifier,
+)
+
+from .rocprof_integration import (
+    RocprofMode,
+    RocprofVersion,
+    KernelTrace,
+    CounterConfig,
+    RocprofResult,
+    DualModeRocprof,
+    create_rocprof_collector,
+)
+
 __all__ = [
     # Kernel fingerprinting
     "KernelFingerprint",
@@ -60,4 +83,20 @@ __all__ = [
     "FamilyClassifier",
     "ClassificationResult",
     "FamilyHeuristics",
+    
+    # Advanced fingerprinting (Ω∞)
+    "DurationDistribution",
+    "GridSignature",
+    "CounterSignature",
+    "KernelFamilyCluster",
+    "KernelFamilyClassifier",
+    
+    # Dual-mode rocprof (Ω∞)
+    "RocprofMode",
+    "RocprofVersion",
+    "KernelTrace",
+    "CounterConfig",
+    "RocprofResult",
+    "DualModeRocprof",
+    "create_rocprof_collector",
 ]
