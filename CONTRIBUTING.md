@@ -1,43 +1,78 @@
 <div align="center">
 
-# 🤝 Contributing to AACO-SIGMA
+# 🤝 Contributing to AACO
 
-**Thank you for your interest in contributing to the AMD AI Compute Observatory!**
+**AMD AI Compute Observatory - Proprietary Repository**
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/pulls)
-[![Contributors](https://img.shields.io/github/contributors/SID-Devu/AMD-AI-Compute-Observatory?style=flat-square)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/graphs/contributors)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20for%20review-blue.svg?style=flat-square)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/pulls)
+[![Owner](https://img.shields.io/badge/owner-SID--Devu-orange?style=flat-square)](https://github.com/SID-Devu)
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## 📢 Contribution Policy
 
-- [Development Setup](#-development-setup)
-- [Code Style](#-code-style)
-- [Testing](#-testing)
-- [Pull Request Process](#-pull-request-process)
-- [Architecture Guidelines](#-architecture-guidelines)
+**Pull requests are welcome for review!**
+
+AMD AI Compute Observatory is a proprietary project owned by **Sudheer Ibrahim Daniel Devu**. While you may submit PRs, please understand:
+
+> ⚠️ **The owner has sole discretion to accept, reject, or modify any contribution.**
 
 ---
 
-## 🛠️ Development Setup
+## 📜 What You CAN Do
 
-### Prerequisites
+| Permission | Description |
+|------------|-------------|
+| ✅ **View** | Browse and read the source code |
+| ✅ **Learn** | Study the code for personal education |
+| ✅ **Submit PRs** | Request changes for owner review |
+| ✅ **Report Issues** | Open issues for bugs or suggestions |
 
-- Python 3.10+
-- ROCm 6.0+ (for GPU features)
-- Git
+---
 
-### Quick Setup
+## 🚫 What You CANNOT Do
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/SID-Devu/AMD-AI-Compute-Observatory.git
-cd AMD-AI-Compute-Observatory
+| Restriction | Description |
+|-------------|-------------|
+| ❌ **Self-Merge** | Only owner can merge PRs |
+| ❌ **Fork & Distribute** | Redistribution is not permitted |
+| ❌ **Commercial Use** | Commercial use is strictly prohibited |
 
-# 2. Create virtual environment
-python -m venv venv
+---
+
+## 📝 PR Submission Guidelines
+
+If you'd like to contribute:
+
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Make** your changes
+4. **Submit** a pull request with clear description
+5. **Wait** for owner review
+
+### Important Terms
+
+By submitting a PR, you agree that:
+- Your contribution becomes the **exclusive property** of the owner if accepted
+- The owner may **modify** your submission before merging
+- **No guarantee** of acceptance is made
+- You **transfer all rights** to submitted code
+
+---
+
+## 📧 Contact
+
+For licensing inquiries or collaboration opportunities, contact the repository owner directly.
+
+---
+
+<div align="center">
+
+**© 2026 Sudheer Ibrahim Daniel Devu. All Rights Reserved.**
+
+</div>
 source venv/bin/activate  # Linux/Mac
 # or: venv\Scripts\activate  # Windows
 

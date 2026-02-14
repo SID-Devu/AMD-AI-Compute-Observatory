@@ -1,21 +1,73 @@
-MIT License
+PROPRIETARY SOFTWARE LICENSE
+============================
 
-Copyright (c) 2026 Sudheer Ibrahim Daniel Devu
+Copyright (c) 2026 Sudheer Ibrahim Daniel Devu. All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+OWNERSHIP
+---------
+This software, including all source code, documentation, designs, algorithms,
+and associated materials ("Software"), is the exclusive property of
+Sudheer Ibrahim Daniel Devu ("Owner"). The Owner retains full and complete
+ownership of all intellectual property rights.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+TERMS AND CONDITIONS
+--------------------
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. VIEWING PERMISSION
+   You are granted permission to view and read the source code of this Software
+   for personal educational and reference purposes only.
+
+2. PROHIBITED ACTIONS
+   Without prior written consent from the Owner, you may NOT:
+
+   a) MODIFY - Alter, adapt, translate, reverse engineer, decompile,
+      disassemble, or create derivative works based on this Software.
+
+   b) DISTRIBUTE - Copy, publish, distribute, sublicense, sell, rent, lease,
+      or transfer this Software to any third party.
+
+   c) COMMERCIAL USE - Use this Software, in whole or in part, for any
+      commercial purpose, product, or service.
+
+   d) FORK - Create public forks intended for redistribution or modification.
+
+3. PULL REQUEST POLICY
+   Contributors may submit pull requests for the Owner's consideration.
+   However:
+   - The Owner has SOLE DISCRETION to accept, reject, or modify any contribution.
+   - Accepted contributions become the exclusive property of the Owner.
+   - By submitting a PR, you transfer all rights to the Owner.
+   - No guarantee of acceptance is made for any submission.
+   - The Owner reserves the right to use submitted ideas without credit.
+
+4. INTELLECTUAL PROPERTY
+   All trademarks, service marks, trade names, and logos contained in this
+   Software are the exclusive property of the Owner.
+
+5. NO WARRANTY
+   THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED. THE OWNER DISCLAIMS ALL WARRANTIES INCLUDING MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+6. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING FROM USE OF THIS SOFTWARE.
+
+7. ENFORCEMENT
+   Unauthorized use, reproduction, modification, or distribution of this Software
+   may result in civil and criminal penalties. The Owner reserves the right to
+   pursue legal action against any violations.
+
+8. GOVERNING LAW
+   This license shall be governed by applicable copyright and intellectual
+   property laws.
+
+CONTACT
+-------
+For licensing inquiries, permissions, or authorized collaboration opportunities,
+contact the Owner directly through official channels.
+
+================================================================================
+                    © 2026 Sudheer Ibrahim Daniel Devu
+                          ALL RIGHTS RESERVED
+================================================================================

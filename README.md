@@ -7,7 +7,7 @@
 <img src="https://img.shields.io/badge/AMD-ED1C24?style=for-the-badge&logo=amd&logoColor=white" alt="AMD"/>
 <img src="https://img.shields.io/badge/ROCm-6.0+-ED1C24?style=for-the-badge&logo=amd&logoColor=white" alt="ROCm"/>
 <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
-<img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
+<img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License"/>
 <img src="https://img.shields.io/badge/Version-4.0.0-blue?style=for-the-badge" alt="Version"/>
 
 <br/>
@@ -15,7 +15,11 @@
 [![Build Status](https://img.shields.io/github/actions/workflow/status/SID-Devu/AMD-AI-Compute-Observatory/ci.yml?branch=master&style=flat-square&logo=github)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/actions)
 [![Code Quality](https://img.shields.io/badge/code%20quality-A+-brightgreen?style=flat-square)](.)
 [![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen?style=flat-square)](.)
-[![Last Commit](https://img.shields.io/github/last-commit/SID-Devu/AMD-AI-Compute-Observatory?style=flat-square)](.)
+[![PRs](https://img.shields.io/badge/PRs-welcome%20for%20review-blue?style=flat-square)](CONTRIBUTING.md)
+
+<br/>
+
+> ⚠️ **PROPRIETARY SOFTWARE** - © 2026 Sudheer Ibrahim Daniel Devu. All Rights Reserved. PRs welcome for review. See [LICENSE](LICENSE).
 
 <br/>
 
@@ -25,7 +29,7 @@
 
 <br/>
 
-[📖 Documentation](#-documentation) • [🚀 Quick Start](#-quick-start) • [🏗️ Architecture](#️-architecture) • [💡 Examples](#-example-output) • [🤝 Contributing](CONTRIBUTING.md)
+[📖 Documentation](#-documentation) • [🚀 Quick Start](#-quick-start) • [🏗️ Architecture](#️-architecture) • [💡 Examples](#-example-output) • [📜 License](LICENSE)
 
 </div>
 

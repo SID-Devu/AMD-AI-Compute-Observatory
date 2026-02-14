@@ -1,0 +1,42 @@
+# ============================================================================
+# CODEOWNERS - AMD AI Compute Observatory
+# ============================================================================
+# 
+# This file defines code ownership and enforces that ALL changes require
+# approval from the repository owner before merging.
+#
+# Owner: Sudheer Ibrahim Daniel Devu (@SID-Devu)
+#
+# POLICY: No external contributions are accepted. All pull requests from
+# non-owners will be automatically closed.
+#
+# ============================================================================
+
+# Default: Owner approval required for ALL files
+*                           @SID-Devu
+
+# Core Source Code
+/aaco/                      @SID-Devu
+/kernel/                    @SID-Devu
+/ebpf/                      @SID-Devu
+/scripts/                   @SID-Devu
+/baselines/                 @SID-Devu
+
+# Configuration
+/configs/                   @SID-Devu
+pyproject.toml              @SID-Devu
+pytest.ini                  @SID-Devu
+
+# Documentation
+/docs/                      @SID-Devu
+README.md                   @SID-Devu
+CONTRIBUTING.md             @SID-Devu
+LICENSE                     @SID-Devu
+
+# Tests
+/tests/                     @SID-Devu
+
+# GitHub Configuration (Critical)
+/.github/                   @SID-Devu
+/.github/workflows/         @SID-Devu
+/.github/CODEOWNERS         @SID-Devu
