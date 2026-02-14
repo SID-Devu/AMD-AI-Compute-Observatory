@@ -64,33 +64,28 @@ __all__ = [
     "FingerprintGenerator",
     "FingerprintMatcher",
     "FingerprintDatabase",
-    
     # Fusion detection
     "FusionPattern",
     "FusionDetector",
     "FusionCandidate",
     "FusionAnalyzer",
-    
     # Performance counters
     "HardwareCounter",
     "CounterSpec",
     "CounterSession",
     "CounterReader",
     "RocprofCounterReader",
-    
     # Family classification
     "KernelFamily",
     "FamilyClassifier",
     "ClassificationResult",
     "FamilyHeuristics",
-    
     # Advanced fingerprinting (Ω∞)
     "DurationDistribution",
     "GridSignature",
     "CounterSignature",
     "KernelFamilyCluster",
     "KernelFamilyClassifier",
-    
     # Dual-mode rocprof (Ω∞)
     "RocprofMode",
     "RocprofVersion",

@@ -5,7 +5,6 @@ Collects GPU metrics (clocks, power, temperature, VRAM, utilization) from rocm-s
 
 import logging
 import re
-import subprocess
 import threading
 import time
 from dataclasses import dataclass
@@ -20,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GPUSample:
     """Single GPU telemetry sample."""
+
     t_ns: int
     device_id: int
     gfx_clock_mhz: float
@@ -37,7 +37,7 @@ class ROCmSMISampler:
     Samples GPU telemetry from rocm-smi at configurable intervals.
     Runs in a background thread during workload execution.
     """
-    
+
     def __init__(
         self,
         interval_ms: int = 500,
@@ -48,48 +48,48 @@ class ROCmSMISampler:
         self.interval_s = interval_ms / 1000.0
         self.device_id = device_id
         self.t0_ns = t0_ns
-        
+
         self.samples: List[GPUSample] = []
         self._running = False
         self._thread: Optional[threading.Thread] = None
-        
+
         # Check if rocm-smi is available
         self._available = self._check_rocm_smi()
-    
+
     def _check_rocm_smi(self) -> bool:
         """Check if rocm-smi is available."""
         result = run_command(["rocm-smi", "--version"])
         return result is not None
-    
+
     @property
     def available(self) -> bool:
         """Check if ROCm-SMI sampling is available."""
         return self._available
-    
+
     def start(self) -> None:
         """Start background sampling thread."""
         if not self._available:
             logger.warning("rocm-smi not available, GPU sampling disabled")
             return
-        
+
         if self._running:
             return
-        
+
         self._running = True
         self._thread = threading.Thread(target=self._sample_loop, daemon=True)
         self._thread.start()
         logger.debug("GPU sampler started")
-    
+
     def stop(self) -> List[GPUSample]:
         """Stop sampling and return collected samples."""
         self._running = False
         if self._thread:
             self._thread.join(timeout=2.0)
             self._thread = None
-        
+
         logger.debug(f"GPU sampler stopped, collected {len(self.samples)} samples")
         return self.samples
-    
+
     def _sample_loop(self) -> None:
         """Main sampling loop."""
         while self._running:
@@ -99,41 +99,49 @@ class ROCmSMISampler:
                     self.samples.append(sample)
             except Exception as e:
                 logger.debug(f"GPU sample collection error: {e}")
-            
+
             time.sleep(self.interval_s)
-    
+
     def _collect_sample(self) -> Optional[GPUSample]:
         """Collect a single sample from rocm-smi."""
         t_ns = get_monotonic_ns() - self.t0_ns
-        
+
         # Get all metrics in one call for efficiency
-        result = run_command([
-            "rocm-smi",
-            "-d", str(self.device_id),
-            "--showclocks", "--showpower", "--showtemp",
-            "--showmeminfo", "vram", "--showuse",
-            "--json"
-        ])
-        
+        result = run_command(
+            [
+                "rocm-smi",
+                "-d",
+                str(self.device_id),
+                "--showclocks",
+                "--showpower",
+                "--showtemp",
+                "--showmeminfo",
+                "vram",
+                "--showuse",
+                "--json",
+            ]
+        )
+
         if not result:
             # Fallback to individual calls
             return self._collect_sample_fallback(t_ns)
-        
+
         # Try JSON parsing first
         try:
             import json
+
             data = json.loads(result)
             gpu_key = f"card{self.device_id}"
-            
+
             if gpu_key in data:
                 gpu_data = data[gpu_key]
                 return self._parse_json_sample(t_ns, gpu_data)
         except (json.JSONDecodeError, KeyError):
             pass
-        
+
         # Fallback to text parsing
         return self._collect_sample_fallback(t_ns)
-    
+
     def _parse_json_sample(self, t_ns: int, gpu_data: Dict) -> GPUSample:
         """Parse GPU sample from JSON output."""
         return GPUSample(
@@ -148,7 +156,7 @@ class ROCmSMISampler:
             gpu_util_pct=float(gpu_data.get("GPU use (%)", 0)),
             mem_util_pct=float(gpu_data.get("GPU memory use (%)", 0)),
         )
-    
+
     def _collect_sample_fallback(self, t_ns: int) -> GPUSample:
         """Collect sample using individual rocm-smi calls."""
         gfx_clock = 0.0
@@ -158,7 +166,7 @@ class ROCmSMISampler:
         vram_used = 0.0
         vram_total = 0.0
         gpu_util = 0.0
-        
+
         # Clocks
         result = run_command(["rocm-smi", "-d", str(self.device_id), "--showclocks"])
         if result:
@@ -171,21 +179,21 @@ class ROCmSMISampler:
                     match = re.search(r"(\d+(?:\.\d+)?)\s*[Mm][Hh]z", line)
                     if match:
                         mem_clock = float(match.group(1))
-        
+
         # Power
         result = run_command(["rocm-smi", "-d", str(self.device_id), "--showpower"])
         if result:
             match = re.search(r"(\d+(?:\.\d+)?)\s*[Ww]", result)
             if match:
                 power = float(match.group(1))
-        
+
         # Temperature
         result = run_command(["rocm-smi", "-d", str(self.device_id), "--showtemp"])
         if result:
             match = re.search(r"(\d+(?:\.\d+)?)\s*[Cc]", result)
             if match:
                 temp = float(match.group(1))
-        
+
         # VRAM
         result = run_command(["rocm-smi", "-d", str(self.device_id), "--showmeminfo", "vram"])
         if result:
@@ -198,14 +206,14 @@ class ROCmSMISampler:
                     match = re.search(r"(\d+)", line)
                     if match:
                         vram_total = float(match.group(1)) / (1024**2)
-        
+
         # Utilization
         result = run_command(["rocm-smi", "-d", str(self.device_id), "--showuse"])
         if result:
             match = re.search(r"GPU use\s*\(%\)\s*:\s*(\d+)", result, re.IGNORECASE)
             if match:
                 gpu_util = float(match.group(1))
-        
+
         return GPUSample(
             t_ns=t_ns,
             device_id=self.device_id,
@@ -218,7 +226,7 @@ class ROCmSMISampler:
             gpu_util_pct=gpu_util,
             mem_util_pct=0.0,
         )
-    
+
     def to_events(self) -> List[GPUEvent]:
         """Convert samples to GPUEvent schema."""
         return [
@@ -233,40 +241,42 @@ class ROCmSMISampler:
             )
             for s in self.samples
         ]
-    
+
     def to_dataframe(self):
         """Convert samples to pandas DataFrame."""
         import pandas as pd
-        
+
         if not self.samples:
             return pd.DataFrame()
-        
-        return pd.DataFrame([
-            {
-                "t_ns": s.t_ns,
-                "t_ms": s.t_ns / 1_000_000,
-                "gfx_clock_mhz": s.gfx_clock_mhz,
-                "mem_clock_mhz": s.mem_clock_mhz,
-                "power_w": s.power_w,
-                "temp_c": s.temp_c,
-                "vram_used_mb": s.vram_used_mb,
-                "gpu_util_pct": s.gpu_util_pct,
-            }
-            for s in self.samples
-        ])
-    
+
+        return pd.DataFrame(
+            [
+                {
+                    "t_ns": s.t_ns,
+                    "t_ms": s.t_ns / 1_000_000,
+                    "gfx_clock_mhz": s.gfx_clock_mhz,
+                    "mem_clock_mhz": s.mem_clock_mhz,
+                    "power_w": s.power_w,
+                    "temp_c": s.temp_c,
+                    "vram_used_mb": s.vram_used_mb,
+                    "gpu_util_pct": s.gpu_util_pct,
+                }
+                for s in self.samples
+            ]
+        )
+
     def get_summary(self) -> Dict:
         """Get summary statistics of collected samples."""
         if not self.samples:
             return {}
-        
+
         import numpy as np
-        
+
         gfx_clocks = [s.gfx_clock_mhz for s in self.samples if s.gfx_clock_mhz > 0]
         powers = [s.power_w for s in self.samples if s.power_w > 0]
         temps = [s.temp_c for s in self.samples if s.temp_c > 0]
         utils = [s.gpu_util_pct for s in self.samples]
-        
+
         return {
             "sample_count": len(self.samples),
             "gfx_clock_mean": float(np.mean(gfx_clocks)) if gfx_clocks else 0,

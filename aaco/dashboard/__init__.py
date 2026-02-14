@@ -9,4 +9,4 @@ Web-based interactive dashboard for real-time visualization and analysis.
 
 from .app import app, create_dashboard
 
-__all__ = ['app', 'create_dashboard']
+__all__ = ["app", "create_dashboard"]

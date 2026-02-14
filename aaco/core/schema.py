@@ -10,6 +10,7 @@ from enum import Enum
 
 class BottleneckClass(Enum):
     """Performance bottleneck classification categories."""
+
     UNKNOWN = "unknown"
     LAUNCH_BOUND = "launch-bound"
     CPU_BOUND = "cpu-bound"
@@ -21,6 +22,7 @@ class BottleneckClass(Enum):
 
 class RegressionSeverity(Enum):
     """Regression severity levels."""
+
     NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
@@ -30,6 +32,7 @@ class RegressionSeverity(Enum):
 
 class Confidence(Enum):
     """Confidence levels for classifications."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -38,13 +41,14 @@ class Confidence(Enum):
 @dataclass
 class HostInfo:
     """Host system information."""
+
     hostname: str
     os: str
     kernel: str
     cpu_model: str
     ram_gb: float
     architecture: str = "x86_64"
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -52,13 +56,14 @@ class HostInfo:
 @dataclass
 class GPUInfo:
     """GPU hardware information."""
+
     vendor: str
     name: str
     driver: str
     rocm_version: str
     vram_gb: float
     device_id: int = 0
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -66,6 +71,7 @@ class GPUInfo:
 @dataclass
 class WorkloadConfig:
     """Workload configuration for inference."""
+
     framework: str
     model_name: str
     model_path: str
@@ -74,7 +80,7 @@ class WorkloadConfig:
     batch_size: int
     warmup_iterations: int
     measure_iterations: int
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -82,11 +88,12 @@ class WorkloadConfig:
 @dataclass
 class BackendConfig:
     """Backend/Execution Provider configuration."""
+
     name: str
     provider: str
     device_id: int
     config: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -94,6 +101,7 @@ class BackendConfig:
 @dataclass
 class SessionMetadata:
     """Complete session metadata - the spine of every session bundle."""
+
     session_id: str
     created_utc: str
     t0_monotonic_ns: int
@@ -103,7 +111,7 @@ class SessionMetadata:
     backend: BackendConfig
     duration_s: float = 0.0
     notes: str = ""
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "session_id": self.session_id,
@@ -121,6 +129,7 @@ class SessionMetadata:
 @dataclass
 class InferenceIteration:
     """Single inference iteration measurement."""
+
     iter_idx: int
     t_start_ns: int
     t_end_ns: int
@@ -133,6 +142,7 @@ class InferenceIteration:
 @dataclass
 class PhaseMetrics:
     """Metrics for a specific execution phase (warmup/measurement)."""
+
     name: str
     iterations: int
     total_time_ms: float
@@ -145,7 +155,7 @@ class PhaseMetrics:
     max_ms: float
     iqr_ms: float
     cov_pct: float
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -153,6 +163,7 @@ class PhaseMetrics:
 @dataclass
 class InferenceResult:
     """Aggregated inference results with percentiles."""
+
     iterations: int
     warmup_iterations: int
     latencies_ms: List[float]
@@ -165,15 +176,15 @@ class InferenceResult:
     max_ms: float
     throughput_samples_per_sec: float
     coefficient_of_variation: float
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
-    
+
     @classmethod
     def from_latencies(cls, latencies: List[float], warmup: int = 0) -> "InferenceResult":
         """Create InferenceResult from raw latency list."""
         import numpy as np
-        
+
         arr = np.array(latencies)
         return cls(
             iterations=len(latencies),
@@ -194,6 +205,7 @@ class InferenceResult:
 @dataclass
 class SystemEvent:
     """Single system telemetry sample."""
+
     t_ns: int
     cpu_pct: float
     rss_mb: float
@@ -207,6 +219,7 @@ class SystemEvent:
 @dataclass
 class GPUEvent:
     """Single GPU telemetry sample."""
+
     t_ns: int
     gfx_clock_mhz: float
     mem_clock_mhz: float
@@ -219,6 +232,7 @@ class GPUEvent:
 @dataclass
 class KernelExecution:
     """Single GPU kernel execution record from rocprof."""
+
     t_start_ns: int
     t_end_ns: int
     dur_ns: int
@@ -232,6 +246,7 @@ class KernelExecution:
 @dataclass
 class KernelSummary:
     """Summary statistics for a GPU kernel."""
+
     kernel_name: str
     calls: int
     total_time_ms: float
@@ -245,6 +260,7 @@ class KernelSummary:
 @dataclass
 class KernelMetrics:
     """Derived kernel-level metrics for bottleneck analysis."""
+
     total_kernel_count: int
     unique_kernel_count: int
     total_kernel_time_ms: float
@@ -257,7 +273,7 @@ class KernelMetrics:
     kernel_amplification_ratio: float  # kernels / ONNX nodes
     gpu_active_ratio: float  # kernel time / wall time
     top_kernels: List[KernelSummary] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
         result["top_kernels"] = [asdict(k) for k in self.top_kernels]
@@ -267,6 +283,7 @@ class KernelMetrics:
 @dataclass
 class GraphNode:
     """ONNX graph node metadata."""
+
     node_id: int
     node_name: str
     op_type: str
@@ -280,9 +297,10 @@ class GraphNode:
     estimated_bytes: Optional[float] = None
 
 
-@dataclass  
+@dataclass
 class KernelAttribution:
     """Mapping from ONNX node to GPU kernel group."""
+
     node_id: int
     op_type: str
     partition_id: Optional[int]
@@ -296,6 +314,7 @@ class KernelAttribution:
 @dataclass
 class EvidenceSignal:
     """Single evidence signal for bottleneck classification."""
+
     signal_name: str
     value: float
     weight: float
@@ -306,13 +325,14 @@ class EvidenceSignal:
 @dataclass
 class BottleneckClassification:
     """Bottleneck classification result with evidence."""
+
     bottleneck_class: BottleneckClass
     confidence: Confidence
     score: float
     top_evidence: List[EvidenceSignal]
     explanation: str
     recommendations: List[str]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "bottleneck_class": self.bottleneck_class.value,
@@ -334,6 +354,7 @@ class BottleneckClassification:
 @dataclass
 class MetricDelta:
     """Delta between two metrics for regression detection."""
+
     metric_name: str
     baseline_value: float
     current_value: float
@@ -346,6 +367,7 @@ class MetricDelta:
 @dataclass
 class RegressionVerdict:
     """Final regression verdict with root cause analysis."""
+
     regression: bool
     severity: RegressionSeverity
     confidence: Confidence
@@ -356,7 +378,7 @@ class RegressionVerdict:
     recommendation: str
     baseline_session_id: str
     comparison_session_id: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "regression": self.regression,
@@ -385,17 +407,18 @@ class RegressionVerdict:
 @dataclass
 class DerivedMetrics:
     """All derived performance metrics for a session."""
+
     # Per-phase metrics
     warmup_phase: "PhaseMetrics"
     measurement_phase: "PhaseMetrics"
-    
+
     # Aggregated metrics by category (Dict[str, float])
     throughput: Dict[str, Any]
     efficiency: Dict[str, Any]
     latency: Dict[str, Any]
     system: Dict[str, Any]
     gpu: Dict[str, Any]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "warmup_phase": self.warmup_phase.to_dict(),

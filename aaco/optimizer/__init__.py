@@ -22,11 +22,11 @@ from aaco.optimizer.auto_optimizer import (
 )
 
 __all__ = [
-    'OptimizationType',
-    'ExperimentStatus',
-    'OptimizationHypothesis',
-    'ExperimentConfig',
-    'ExperimentResult',
-    'AutoOptimizationEngine',
-    'create_auto_optimizer',
+    "OptimizationType",
+    "ExperimentStatus",
+    "OptimizationHypothesis",
+    "ExperimentConfig",
+    "ExperimentResult",
+    "AutoOptimizationEngine",
+    "create_auto_optimizer",
 ]

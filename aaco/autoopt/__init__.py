@@ -31,7 +31,7 @@ from .code_generator import (
 __all__ = [
     # Rules
     "OptimizationRule",
-    "RuleCategory", 
+    "RuleCategory",
     "RuleCondition",
     "RuleAction",
     "RulePriority",

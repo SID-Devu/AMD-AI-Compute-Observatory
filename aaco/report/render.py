@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from . import plots
 
@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 class ReportRenderer:
     """
     Renders performance reports from session bundles.
-    
+
     Supports:
     - Terminal (colored text)
     - HTML (Jinja2 templates)
     - JSON (structured data)
     """
-    
+
     def __init__(self, session_path: Path):
         self.session_path = Path(session_path)
         self.data: Dict[str, Any] = {}
         self._load_session()
-    
+
     def _load_session(self) -> None:
         """Load all session artifacts."""
         # Load session metadata
@@ -36,46 +36,46 @@ class ReportRenderer:
         if meta_file.exists():
             with open(meta_file) as f:
                 self.data["metadata"] = json.load(f)
-        
+
         # Load inference results
         results_file = self.session_path / "inference_results.json"
         if results_file.exists():
             with open(results_file) as f:
                 self.data["inference_results"] = json.load(f)
-        
+
         # Load derived metrics
         metrics_file = self.session_path / "derived_metrics.json"
         if metrics_file.exists():
             with open(metrics_file) as f:
                 self.data["metrics"] = json.load(f)
-        
+
         # Load bottleneck analysis
         bottleneck_file = self.session_path / "bottleneck.json"
         if bottleneck_file.exists():
             with open(bottleneck_file) as f:
                 self.data["bottleneck"] = json.load(f)
-        
+
         # Load kernel summary if available
         kernel_file = self.session_path / "kernel_summary.json"
         if kernel_file.exists():
             with open(kernel_file) as f:
                 self.data["kernel_summary"] = json.load(f)
-        
+
         # Load GPU samples
         gpu_file = self.session_path / "gpu_samples.json"
         if gpu_file.exists():
             with open(gpu_file) as f:
                 self.data["gpu_samples"] = json.load(f)
-    
+
     def _generate_plots(self) -> Dict[str, str]:
         """
         Generate embedded plots for the report.
-        
+
         Returns:
             Dict of plot_name -> base64 PNG string
         """
         plots_dict = {}
-        
+
         # Latency histogram
         results = self.data.get("inference_results", {})
         latencies = results.get("latencies_ms", [])
@@ -86,7 +86,7 @@ class ReportRenderer:
             plots_dict["latency_timeline"] = plots.create_latency_timeline(
                 latencies, title="Latency Over Iterations"
             )
-        
+
         # Kernel charts
         kernels = self.data.get("kernel_summary", [])
         if kernels:
@@ -96,33 +96,33 @@ class ReportRenderer:
             plots_dict["kernel_duration_hist"] = plots.create_kernel_duration_histogram(
                 kernels, title="Kernel Duration Distribution"
             )
-        
+
         # GPU timeline
         gpu_samples = self.data.get("gpu_samples", [])
         if gpu_samples:
             plots_dict["gpu_timeline"] = plots.create_gpu_timeline(
                 gpu_samples, title="GPU Metrics Over Time"
             )
-        
+
         # Bottleneck radar
         metrics = self.data.get("metrics", {})
         if metrics:
             plots_dict["bottleneck_radar"] = plots.create_bottleneck_radar(
                 metrics, title="Performance Indicators"
             )
-        
+
         return plots_dict
-    
+
     def render_terminal(self) -> str:
         """Render report for terminal output."""
         lines = []
-        
+
         # Header
         lines.append("╔" + "═" * 60 + "╗")
         lines.append("║" + " AMD AI Compute Observatory - Session Report ".center(60) + "║")
         lines.append("╚" + "═" * 60 + "╝")
         lines.append("")
-        
+
         # Session info
         meta = self.data.get("metadata", {})
         lines.append("═══ Session Information ═══")
@@ -130,14 +130,14 @@ class ReportRenderer:
         lines.append(f"  Timestamp:   {meta.get('timestamp', 'N/A')}")
         lines.append(f"  Tag:         {meta.get('tag', 'N/A')}")
         lines.append(f"  Host:        {meta.get('hostname', 'N/A')}")
-        
+
         gpu = meta.get("gpu", {})
         if gpu:
             lines.append(f"  GPU:         {gpu.get('name', 'N/A')}")
             lines.append(f"  VRAM:        {gpu.get('vram_total_mb', 0)} MB")
-        
+
         lines.append("")
-        
+
         # Latency metrics
         metrics = self.data.get("metrics", {})
         lines.append("═══ Performance Metrics ═══")
@@ -148,14 +148,14 @@ class ReportRenderer:
         lines.append(f"  P99 Latency:            {metrics.get('measurement_p99_ms', 0):.3f} ms")
         lines.append(f"  Throughput:             {metrics.get('throughput_ips', 0):.1f} infer/sec")
         lines.append("")
-        
+
         # Efficiency metrics
         lines.append("═══ Efficiency Metrics ═══")
         lines.append(f"  GPU Active Ratio:       {metrics.get('gpu_active_ratio', 0):.2%}")
         lines.append(f"  Kernel Amplification:   {metrics.get('kar', 0):.1f}x")
         lines.append(f"  Microkernel %:          {metrics.get('microkernel_pct', 0):.1f}%")
         lines.append("")
-        
+
         # GPU utilization
         if "gpu_util_mean_pct" in metrics:
             lines.append("═══ GPU Utilization ═══")
@@ -164,45 +164,45 @@ class ReportRenderer:
             lines.append(f"  Power (mean):           {metrics.get('power_mean_w', 0):.0f}W")
             lines.append(f"  Temperature (max):      {metrics.get('temp_max_c', 0):.0f}°C")
             lines.append("")
-        
+
         # Bottleneck analysis
         bottleneck = self.data.get("bottleneck", {})
         if bottleneck:
             lines.append("═══ Bottleneck Analysis ═══")
             lines.append(f"  Primary:     {bottleneck.get('primary', 'N/A').upper()}")
             lines.append(f"  Confidence:  {bottleneck.get('confidence', 0):.0%}")
-            
+
             secondary = bottleneck.get("secondary", [])
             if secondary:
                 lines.append(f"  Secondary:   {', '.join(secondary)}")
-            
+
             evidence = bottleneck.get("evidence", [])
             if evidence:
                 lines.append("\n  Evidence:")
                 for ev in evidence[:5]:
                     lines.append(f"    • {ev}")
-            
+
             recommendations = bottleneck.get("recommendations", [])
             if recommendations:
                 lines.append("\n  Recommendations:")
                 for rec in recommendations[:3]:
                     lines.append(f"    → {rec}")
-        
+
         lines.append("")
         lines.append("═" * 62)
-        
+
         return "\n".join(lines)
-    
+
     def render_html(self) -> str:
         """Render HTML report."""
         try:
             from jinja2 import Template
         except ImportError:
             return self._render_basic_html()
-        
+
         # Generate plots
         generated_plots = self._generate_plots()
-        
+
         template = Template(HTML_TEMPLATE)
         return template.render(
             data=self.data,
@@ -211,17 +211,17 @@ class ReportRenderer:
             plots=generated_plots,
             embed_plot=plots.embed_plot_in_html,
         )
-    
+
     def _render_basic_html(self) -> str:
         """Render basic HTML without Jinja2."""
         meta = self.data.get("metadata", {})
         metrics = self.data.get("metrics", {})
         bottleneck = self.data.get("bottleneck", {})
-        
+
         html = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>AACO Report - {meta.get('session_id', 'Session')}</title>
+    <title>AACO Report - {meta.get("session_id", "Session")}</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
                max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }}
@@ -236,7 +236,7 @@ class ReportRenderer:
         .metric-name {{ color: #666; }}
         .metric-value {{ font-weight: bold; color: #333; }}
         .bottleneck {{ font-size: 24px; font-weight: bold; 
-                       color: {'#d32f2f' if bottleneck.get('primary') == 'launch_overhead' else '#388e3c'}; }}
+                       color: {"#d32f2f" if bottleneck.get("primary") == "launch_overhead" else "#388e3c"}; }}
         .evidence {{ color: #666; margin: 5px 0; }}
         .recommendation {{ background: #fff3e0; padding: 10px; border-radius: 5px; margin: 5px 0; }}
     </style>
@@ -244,33 +244,33 @@ class ReportRenderer:
 <body>
     <div class="header">
         <h1>AMD AI Compute Observatory</h1>
-        <p>Session: {meta.get('session_id', 'N/A')} | {meta.get('timestamp', 'N/A')}</p>
+        <p>Session: {meta.get("session_id", "N/A")} | {meta.get("timestamp", "N/A")}</p>
     </div>
     
     <div class="card">
         <h2>Performance Summary</h2>
-        <div class="metric"><span class="metric-name">Mean Latency</span><span class="metric-value">{metrics.get('measurement_mean_ms', 0):.3f} ms</span></div>
-        <div class="metric"><span class="metric-name">Std Deviation</span><span class="metric-value">{metrics.get('measurement_std_ms', 0):.3f} ms</span></div>
-        <div class="metric"><span class="metric-name">P99 Latency</span><span class="metric-value">{metrics.get('measurement_p99_ms', 0):.3f} ms</span></div>
-        <div class="metric"><span class="metric-name">Throughput</span><span class="metric-value">{metrics.get('throughput_ips', 0):.1f} infer/sec</span></div>
+        <div class="metric"><span class="metric-name">Mean Latency</span><span class="metric-value">{metrics.get("measurement_mean_ms", 0):.3f} ms</span></div>
+        <div class="metric"><span class="metric-name">Std Deviation</span><span class="metric-value">{metrics.get("measurement_std_ms", 0):.3f} ms</span></div>
+        <div class="metric"><span class="metric-name">P99 Latency</span><span class="metric-value">{metrics.get("measurement_p99_ms", 0):.3f} ms</span></div>
+        <div class="metric"><span class="metric-name">Throughput</span><span class="metric-value">{metrics.get("throughput_ips", 0):.1f} infer/sec</span></div>
     </div>
     
     <div class="card">
         <h2>Efficiency Metrics</h2>
-        <div class="metric"><span class="metric-name">GPU Active Ratio</span><span class="metric-value">{metrics.get('gpu_active_ratio', 0)*100:.1f}%</span></div>
-        <div class="metric"><span class="metric-name">Kernel Amplification</span><span class="metric-value">{metrics.get('kar', 0):.1f}x</span></div>
-        <div class="metric"><span class="metric-name">Microkernel %</span><span class="metric-value">{metrics.get('microkernel_pct', 0):.1f}%</span></div>
+        <div class="metric"><span class="metric-name">GPU Active Ratio</span><span class="metric-value">{metrics.get("gpu_active_ratio", 0) * 100:.1f}%</span></div>
+        <div class="metric"><span class="metric-name">Kernel Amplification</span><span class="metric-value">{metrics.get("kar", 0):.1f}x</span></div>
+        <div class="metric"><span class="metric-name">Microkernel %</span><span class="metric-value">{metrics.get("microkernel_pct", 0):.1f}%</span></div>
     </div>
     
     <div class="card">
         <h2>Bottleneck Analysis</h2>
-        <p class="bottleneck">{bottleneck.get('primary', 'N/A').upper().replace('_', ' ')}</p>
-        <p>Confidence: {bottleneck.get('confidence', 0)*100:.0f}%</p>
+        <p class="bottleneck">{bottleneck.get("primary", "N/A").upper().replace("_", " ")}</p>
+        <p>Confidence: {bottleneck.get("confidence", 0) * 100:.0f}%</p>
     </div>
 </body>
 </html>"""
         return html
-    
+
     def render_json(self) -> str:
         """Render JSON report."""
         return json.dumps(self.data, indent=2, default=str)

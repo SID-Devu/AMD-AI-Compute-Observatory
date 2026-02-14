@@ -7,7 +7,6 @@ import json
 import os
 import subprocess
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 import logging
@@ -97,7 +96,7 @@ def safe_json_dump(data: Any, path: Union[str, Path], indent: int = 2) -> None:
     """Safely write JSON to file with atomic write pattern."""
     path = Path(path)
     temp_path = path.with_suffix(".tmp")
-    
+
     try:
         with open(temp_path, "w") as f:
             json.dump(data, f, indent=indent, default=str)
@@ -133,7 +132,7 @@ def read_proc_stat() -> Dict[str, Any]:
     content = read_proc_file("/proc/stat")
     if not content:
         return {}
-    
+
     stats = {}
     for line in content.split("\n"):
         if line.startswith("cpu "):
@@ -153,7 +152,7 @@ def read_proc_stat() -> Dict[str, Any]:
             stats["procs_running"] = int(line.split()[1])
         elif line.startswith("procs_blocked"):
             stats["procs_blocked"] = int(line.split()[1])
-    
+
     return stats
 
 
@@ -162,7 +161,7 @@ def read_proc_vmstat() -> Dict[str, int]:
     content = read_proc_file("/proc/vmstat")
     if not content:
         return {}
-    
+
     stats = {}
     for line in content.split("\n"):
         parts = line.split()
@@ -171,7 +170,7 @@ def read_proc_vmstat() -> Dict[str, int]:
                 stats[parts[0]] = int(parts[1])
             except ValueError:
                 pass
-    
+
     return stats
 
 
@@ -180,7 +179,7 @@ def read_loadavg() -> Dict[str, float]:
     content = read_proc_file("/proc/loadavg")
     if not content:
         return {}
-    
+
     parts = content.split()
     return {
         "load1": float(parts[0]),
@@ -194,11 +193,11 @@ def read_process_stat(pid: int) -> Dict[str, Any]:
     content = read_proc_file(f"/proc/{pid}/stat")
     if not content:
         return {}
-    
+
     # Parse the complex /proc/pid/stat format
     # Format: pid (comm) state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt cmajflt utime stime ...
     parts = content.split()
-    
+
     return {
         "pid": int(parts[0]),
         "state": parts[2],
@@ -217,14 +216,14 @@ def read_process_status(pid: int) -> Dict[str, Any]:
     content = read_proc_file(f"/proc/{pid}/status")
     if not content:
         return {}
-    
+
     status = {}
     for line in content.split("\n"):
         if ":" in line:
             key, value = line.split(":", 1)
             key = key.strip()
             value = value.strip()
-            
+
             # Parse specific fields
             if key in ["VmRSS", "VmSize", "VmPeak"]:
                 # Remove "kB" suffix and convert
@@ -242,7 +241,7 @@ def read_process_status(pid: int) -> Dict[str, Any]:
                     status["threads"] = int(value)
                 except ValueError:
                     pass
-    
+
     return status
 
 
@@ -250,25 +249,25 @@ def compute_cpu_percent(prev_stat: Dict, curr_stat: Dict) -> float:
     """Compute CPU percentage between two /proc/stat snapshots."""
     if not prev_stat or not curr_stat:
         return 0.0
-    
+
     prev_cpu = prev_stat.get("cpu_total", {})
     curr_cpu = curr_stat.get("cpu_total", {})
-    
+
     if not prev_cpu or not curr_cpu:
         return 0.0
-    
+
     prev_idle = prev_cpu.get("idle", 0) + prev_cpu.get("iowait", 0)
     curr_idle = curr_cpu.get("idle", 0) + curr_cpu.get("iowait", 0)
-    
+
     prev_total = sum(prev_cpu.values())
     curr_total = sum(curr_cpu.values())
-    
+
     total_diff = curr_total - prev_total
     idle_diff = curr_idle - prev_idle
-    
+
     if total_diff == 0:
         return 0.0
-    
+
     return 100.0 * (1.0 - idle_diff / total_diff)
 
 
@@ -299,8 +298,9 @@ def percentile(data: List[float], p: float) -> float:
     """Calculate percentile of a list of values."""
     if not data:
         return 0.0
-    
+
     import numpy as np
+
     return float(np.percentile(data, p))
 
 
@@ -313,67 +313,67 @@ def ensure_dir(path: Union[str, Path]) -> Path:
 
 class Timer:
     """Context manager for timing code blocks."""
-    
+
     def __init__(self, name: str = ""):
         self.name = name
         self.start_ns = 0
         self.end_ns = 0
         self.duration_ns = 0
         self.duration_ms = 0.0
-    
+
     def __enter__(self) -> "Timer":
         self.start_ns = get_monotonic_ns()
         return self
-    
+
     def __exit__(self, *args) -> None:
         self.end_ns = get_monotonic_ns()
         self.duration_ns = self.end_ns - self.start_ns
         self.duration_ms = ns_to_ms(self.duration_ns)
-        
+
         if self.name:
             logger.debug(f"{self.name}: {self.duration_ms:.2f} ms")
 
 
 class RateTracker:
     """Track rates over a sliding time window."""
-    
+
     def __init__(self, window_seconds: float = 1.0):
         self.window_ns = int(window_seconds * 1e9)
         self.events: List[int] = []
-    
+
     def record(self, timestamp_ns: Optional[int] = None) -> None:
         """Record an event."""
         ts = timestamp_ns or get_monotonic_ns()
         self.events.append(ts)
         self._cleanup(ts)
-    
+
     def _cleanup(self, current_ns: int) -> None:
         """Remove events outside the window."""
         cutoff = current_ns - self.window_ns
         self.events = [e for e in self.events if e > cutoff]
-    
+
     def get_rate(self) -> float:
         """Get events per second."""
         if not self.events:
             return 0.0
-        
+
         current = get_monotonic_ns()
         self._cleanup(current)
-        
+
         if not self.events:
             return 0.0
-        
+
         window_actual = (current - self.events[0]) / 1e9
         if window_actual <= 0:
             return 0.0
-        
+
         return len(self.events) / window_actual
 
 
 def hash_file(path: Union[str, Path], algorithm: str = "sha256") -> str:
     """Compute hash of a file."""
     import hashlib
-    
+
     h = hashlib.new(algorithm)
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):

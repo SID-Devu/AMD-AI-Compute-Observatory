@@ -23,11 +23,11 @@ from aaco.trace_lake.unified_trace import (
 )
 
 __all__ = [
-    'TraceCategory',
-    'EventPhase',
-    'TraceEvent',
-    'AnomalyMarker',
-    'TraceLakeConfig',
-    'UnifiedTraceLake',
-    'create_trace_lake',
+    "TraceCategory",
+    "EventPhase",
+    "TraceEvent",
+    "AnomalyMarker",
+    "TraceLakeConfig",
+    "UnifiedTraceLake",
+    "create_trace_lake",
 ]

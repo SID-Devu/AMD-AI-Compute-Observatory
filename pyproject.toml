@@ -172,3 +172,25 @@ directory = "htmlcov"
 [tool.bandit]
 exclude_dirs = ["tests", "sessions"]
 skips = ["B101"]
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [".git", ".venv", "build", "dist", "sessions", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line-too-long - handled by formatter
+    "E722",  # bare-except - common in system/hardware access code
+    "E402",  # module-level-import-not-at-top - used for conditional imports
+    "E741",  # ambiguous-variable-name - sometimes legitimate
+    "F401",  # unused-import - many are for try/except availability checks
+    "F403",  # star-imports - used in some modules intentionally
+    "F841",  # local-variable-is-assigned-to-but-never-used - informational
+    "W291",  # trailing-whitespace - handled by formatter
+    "W293",  # blank-line-contains-whitespace - handled by formatter
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

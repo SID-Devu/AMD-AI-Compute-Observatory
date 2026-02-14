@@ -14,31 +14,32 @@ from .optimization_rule import RuleAction
 
 class VariantType(Enum):
     """Types of code variants."""
-    KERNEL_HIP = auto()      # HIP kernel source
-    CONFIG_PYTHON = auto()   # Python configuration
-    GRAPH_TRANSFORM = auto() # Graph transformation
-    LAUNCH_CONFIG = auto()   # Kernel launch configuration
-    BUILD_FLAG = auto()      # Compiler flags
+
+    KERNEL_HIP = auto()  # HIP kernel source
+    CONFIG_PYTHON = auto()  # Python configuration
+    GRAPH_TRANSFORM = auto()  # Graph transformation
+    LAUNCH_CONFIG = auto()  # Kernel launch configuration
+    BUILD_FLAG = auto()  # Compiler flags
 
 
 @dataclass
 class CodeVariant:
     """A generated code variant."""
-    
+
     variant_id: str
     variant_type: VariantType
-    
+
     # Source
     source_code: str = ""
-    
+
     # Metadata
     description: str = ""
     expected_improvement_pct: float = 0.0
-    
+
     # Context
     target_kernel: Optional[str] = None
     target_file: Optional[str] = None
-    
+
     # Validation
     compilation_status: Optional[str] = None
     correctness_verified: bool = False
@@ -47,13 +48,13 @@ class CodeVariant:
 @dataclass
 class GeneratedCode:
     """Collection of generated code for an optimization."""
-    
+
     # Variants
     variants: List[CodeVariant] = field(default_factory=list)
-    
+
     # Summary
     primary_variant: Optional[CodeVariant] = None
-    
+
     # Instructions
     apply_instructions: str = ""
     rollback_instructions: str = ""
@@ -62,50 +63,48 @@ class GeneratedCode:
 class CodeGenerator:
     """
     Generates optimized code based on optimization rules.
-    
+
     Templates:
     - HIP kernel optimizations
     - Configuration changes
     - Launch parameter modifications
     """
-    
+
     def __init__(self):
         self._variant_counter = 0
         self._templates: Dict[str, str] = self._load_templates()
-    
-    def generate(self, action: RuleAction, 
-                 context: Dict[str, Any]) -> GeneratedCode:
+
+    def generate(self, action: RuleAction, context: Dict[str, Any]) -> GeneratedCode:
         """
         Generate code for an optimization action.
         """
         result = GeneratedCode()
-        
+
         if action.action_type == "config_change":
             variant = self._generate_config_change(action, context)
             result.variants.append(variant)
-            
+
         elif action.action_type == "code_transform":
             variants = self._generate_transform(action, context)
             result.variants.extend(variants)
-            
+
         elif action.action_type == "suggestion":
             variant = self._generate_suggestion(action, context)
             result.variants.append(variant)
-        
+
         if result.variants:
             result.primary_variant = result.variants[0]
             result.apply_instructions = self._generate_instructions(result.variants)
-        
+
         return result
-    
-    def _generate_config_change(self, action: RuleAction,
-                               context: Dict[str, Any]) -> CodeVariant:
+
+    def _generate_config_change(self, action: RuleAction, context: Dict[str, Any]) -> CodeVariant:
         """Generate configuration change code."""
         self._variant_counter += 1
-        
+
         target = action.target
         new_value = action.new_value
-        
+
         # Generate Python config code
         if target == "batch_size":
             if new_value == "double":
@@ -114,98 +113,91 @@ class CodeGenerator:
                 )
             else:
                 code = f"# Set batch size\nbatch_size = {new_value}"
-                
+
         elif target == "dtype":
             code = self._templates["dtype_change"].format(
-                new_dtype=new_value,
-                model_var=context.get("model_var", "model")
+                new_dtype=new_value, model_var=context.get("model_var", "model")
             )
-            
+
         elif target == "workgroup_size":
-            code = self._templates["workgroup_size"].format(
-                size=new_value
-            )
-            
+            code = self._templates["workgroup_size"].format(size=new_value)
+
         elif target == "max_registers":
-            code = self._templates["max_registers"].format(
-                max_regs=new_value
-            )
-            
+            code = self._templates["max_registers"].format(max_regs=new_value)
+
         elif target == "tensor_layout":
-            code = self._templates["tensor_layout"].format(
-                new_layout=new_value
-            )
-            
+            code = self._templates["tensor_layout"].format(new_layout=new_value)
+
         else:
             code = f"# Config change: {target} = {new_value}"
-        
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.CONFIG_PYTHON,
             source_code=code,
             description=action.description,
         )
-    
-    def _generate_transform(self, action: RuleAction,
-                           context: Dict[str, Any]) -> List[CodeVariant]:
+
+    def _generate_transform(self, action: RuleAction, context: Dict[str, Any]) -> List[CodeVariant]:
         """Generate code transform variants."""
         variants = []
         transform = action.transform
         params = action.transform_params
-        
+
         if transform == "fuse_elementwise":
             variants.append(self._gen_fusion_code(context))
-            
+
         elif transform == "tile_for_cache":
             tile_size = params.get("tile_size", "auto")
             variants.append(self._gen_tiling_code(context, tile_size))
-            
+
         elif transform == "use_mfma_intrinsics":
             variants.append(self._gen_mfma_code(context))
-            
+
         elif transform == "transpose_for_coalescing":
             variants.append(self._gen_transpose_code(context))
-            
+
         elif transform == "fuse_matmul_bias_activation":
             variants.append(self._gen_matmul_fusion_code(context))
-            
+
         else:
             # Generic transform stub
             self._variant_counter += 1
-            variants.append(CodeVariant(
-                variant_id=f"var_{self._variant_counter:04d}",
-                variant_type=VariantType.GRAPH_TRANSFORM,
-                source_code=f"# Transform: {transform}\n# Params: {params}",
-                description=action.description,
-            ))
-        
+            variants.append(
+                CodeVariant(
+                    variant_id=f"var_{self._variant_counter:04d}",
+                    variant_type=VariantType.GRAPH_TRANSFORM,
+                    source_code=f"# Transform: {transform}\n# Params: {params}",
+                    description=action.description,
+                )
+            )
+
         return variants
-    
-    def _generate_suggestion(self, action: RuleAction,
-                            context: Dict[str, Any]) -> CodeVariant:
+
+    def _generate_suggestion(self, action: RuleAction, context: Dict[str, Any]) -> CodeVariant:
         """Generate suggestion as comment."""
         self._variant_counter += 1
-        
-        code = f'''# OPTIMIZATION SUGGESTION
+
+        code = f"""# OPTIMIZATION SUGGESTION
 # ======================
 # {action.description}
 #
 # Target: {action.target}
 # 
 # Review the following code and consider applying this optimization:
-'''
-        
+"""
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.CONFIG_PYTHON,
             source_code=code,
             description=action.description,
         )
-    
+
     def _gen_fusion_code(self, context: Dict[str, Any]) -> CodeVariant:
         """Generate kernel fusion code."""
         self._variant_counter += 1
-        
+
         code = '''# Fused elementwise kernel
 import torch
 from torch.cuda import amp
@@ -220,7 +212,7 @@ def fused_elementwise(x, w1, w2, bias):
 def fused_elementwise_compiled(x, w1, w2, bias):
     return x * w1 + x * w2 + bias
 '''
-        
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.GRAPH_TRANSFORM,
@@ -228,18 +220,17 @@ def fused_elementwise_compiled(x, w1, w2, bias):
             description="Fused elementwise operations",
             expected_improvement_pct=20.0,
         )
-    
-    def _gen_tiling_code(self, context: Dict[str, Any], 
-                        tile_size: Any) -> CodeVariant:
+
+    def _gen_tiling_code(self, context: Dict[str, Any], tile_size: Any) -> CodeVariant:
         """Generate cache tiling code."""
         self._variant_counter += 1
-        
+
         if tile_size == "auto":
             # Calculate optimal tile size based on L2 cache
             l2_size_kb = context.get("l2_cache_kb", 8192)
             tile_size = min(256, int((l2_size_kb * 1024 / 4) ** 0.5))
-        
-        code = f'''# Cache-optimized tiling
+
+        code = f"""# Cache-optimized tiling
 # Tile size: {tile_size} (fits in L2 cache)
 
 TILE_SIZE = {tile_size}
@@ -281,8 +272,8 @@ __global__ void tiled_kernel(float* A, float* B, float* C, int N) {{
         C[row * N + col] = sum;
     }}
 }}
-'''
-        
+"""
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.KERNEL_HIP,
@@ -290,12 +281,12 @@ __global__ void tiled_kernel(float* A, float* B, float* C, int N) {{
             description=f"Cache-tiled kernel with tile size {tile_size}",
             expected_improvement_pct=20.0,
         )
-    
+
     def _gen_mfma_code(self, context: Dict[str, Any]) -> CodeVariant:
         """Generate MFMA intrinsics code."""
         self._variant_counter += 1
-        
-        code = '''// Matrix multiply using AMD MFMA intrinsics
+
+        code = """// Matrix multiply using AMD MFMA intrinsics
 // Requires CDNA architecture (MI100, MI200, MI300)
 
 #include <hip/hip_runtime.h>
@@ -352,8 +343,8 @@ __global__ void mfma_matmul_f16(
         C[cRow * N + cCol] = acc[0];
     }
 }
-'''
-        
+"""
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.KERNEL_HIP,
@@ -361,11 +352,11 @@ __global__ void mfma_matmul_f16(
             description="Matrix multiply using AMD MFMA intrinsics",
             expected_improvement_pct=30.0,
         )
-    
+
     def _gen_transpose_code(self, context: Dict[str, Any]) -> CodeVariant:
         """Generate memory coalescing transpose."""
         self._variant_counter += 1
-        
+
         code = '''# Memory-coalesced tensor operations
 import torch
 
@@ -406,7 +397,7 @@ def optimized_matmul(A, B):
     A, B = transpose_for_coalescing(A, B)
     return torch.matmul(A, B)
 '''
-        
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.CONFIG_PYTHON,
@@ -414,11 +405,11 @@ def optimized_matmul(A, B):
             description="Memory coalescing optimization",
             expected_improvement_pct=15.0,
         )
-    
+
     def _gen_matmul_fusion_code(self, context: Dict[str, Any]) -> CodeVariant:
         """Generate MatMul + Bias + Activation fusion."""
         self._variant_counter += 1
-        
+
         code = '''# Fused MatMul + Bias + Activation
 import torch
 import torch.nn as nn
@@ -477,7 +468,7 @@ def convert_to_fused(model):
             convert_to_fused(module)
     return model
 '''
-        
+
         return CodeVariant(
             variant_id=f"var_{self._variant_counter:04d}",
             variant_type=VariantType.GRAPH_TRANSFORM,
@@ -485,59 +476,61 @@ def convert_to_fused(model):
             description="Fused MatMul + Bias + Activation",
             expected_improvement_pct=15.0,
         )
-    
+
     def _generate_instructions(self, variants: List[CodeVariant]) -> str:
         """Generate application instructions."""
         lines = ["# How to Apply These Optimizations", ""]
-        
+
         for i, variant in enumerate(variants, 1):
             lines.append(f"## Step {i}: {variant.description}")
             lines.append("")
-            
+
             if variant.variant_type == VariantType.CONFIG_PYTHON:
                 lines.append("Add the following to your Python code:")
             elif variant.variant_type == VariantType.KERNEL_HIP:
                 lines.append("Replace your kernel with this optimized version:")
             elif variant.variant_type == VariantType.GRAPH_TRANSFORM:
                 lines.append("Apply this graph transformation:")
-            
+
             lines.append("")
             lines.append("```")
-            lines.append(variant.source_code[:500] + ("..." if len(variant.source_code) > 500 else ""))
+            lines.append(
+                variant.source_code[:500] + ("..." if len(variant.source_code) > 500 else "")
+            )
             lines.append("```")
             lines.append("")
-        
+
         return "\n".join(lines)
-    
+
     def _load_templates(self) -> Dict[str, str]:
         """Load code generation templates."""
         return {
-            "batch_size_double": '''# Double batch size for better utilization
+            "batch_size_double": """# Double batch size for better utilization
 # Previous: batch_size = {current}
 batch_size = {current} * 2
 print(f"Increased batch size to {{batch_size}}")
-''',
-            "dtype_change": '''# Change precision to {new_dtype}
+""",
+            "dtype_change": """# Change precision to {new_dtype}
 {model_var} = {model_var}.to(torch.{new_dtype})
 # Enable autocast for mixed precision
 with torch.autocast(device_type='cuda', dtype=torch.{new_dtype}):
     output = {model_var}(input)
-''',
-            "workgroup_size": '''# Set optimal workgroup size
+""",
+            "workgroup_size": """# Set optimal workgroup size
 __launch_bounds__({size})
 __global__ void optimized_kernel(...) {{
     // Kernel body
 }}
-''',
-            "max_registers": '''# Limit register usage for better occupancy
+""",
+            "max_registers": """# Limit register usage for better occupancy
 __launch_bounds__(256, {max_regs})
 __global__ void register_limited_kernel(...) {{
     // Kernel body  
 }}
-''',
-            "tensor_layout": '''# Change tensor layout to {new_layout}
+""",
+            "tensor_layout": """# Change tensor layout to {new_layout}
 # For convolutions, {new_layout} often provides better vectorization
 tensor = tensor.to(memory_format=torch.channels_last)  # For NCHW->NHWC
 # Or use contiguous() after transposing
-''',
+""",
         }
