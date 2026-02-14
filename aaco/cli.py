@@ -376,6 +376,219 @@ def info() -> None:
         click.echo("\nGPU:       NOT DETECTED")
 
 
+@cli.command()
+@click.argument("model_path", type=click.Path(exists=True))
+@click.option("--backend", "-b", default="migraphx",
+              type=click.Choice(["migraphx", "rocm", "cuda", "cpu"]),
+              help="Execution provider backend")
+@click.option("--batches", "-B", default="1,2,4,8,16,32",
+              help="Comma-separated batch sizes to sweep")
+@click.option("--warmup", "-w", default=5, help="Warmup iterations per batch size")
+@click.option("--iterations", "-n", default=50, help="Measurement iterations per batch size")
+@click.option("--output", "-o", default="./aaco_sessions", help="Output directory")
+@click.option("--tag", "-t", default=None, help="Session tag for identification")
+@click.pass_context
+def sweep(
+    ctx: click.Context,
+    model_path: str,
+    backend: str,
+    batches: str,
+    warmup: int,
+    iterations: int,
+    output: str,
+    tag: Optional[str],
+) -> None:
+    """
+    Run batch size sweep to analyze scaling characteristics.
+    
+    Runs benchmark at multiple batch sizes and generates scaling analysis:
+    - Throughput vs batch size curve
+    - Latency vs batch size curve  
+    - Saturation point detection
+    - Optimal batch size recommendation
+    """
+    from aaco.analytics.batch_scaler import BatchScalingAnalyzer, BatchPoint
+    
+    logger = logging.getLogger("aaco.cli.sweep")
+    
+    click.echo(click.style("\n╔══════════════════════════════════════════════╗", fg="magenta"))
+    click.echo(click.style("║   AMD AI Compute Observatory - Batch Sweep   ║", fg="magenta"))
+    click.echo(click.style("╚══════════════════════════════════════════════╝\n", fg="magenta"))
+    
+    # Parse batch sizes
+    try:
+        batch_sizes = [int(b.strip()) for b in batches.split(",")]
+    except ValueError:
+        click.echo(click.style("Error: Invalid batch sizes format", fg="red"))
+        sys.exit(1)
+    
+    click.echo(f"Model:      {model_path}")
+    click.echo(f"Backend:    {backend}")
+    click.echo(f"Batches:    {batch_sizes}")
+    click.echo(f"Iterations: {warmup} warmup + {iterations} measurement per batch")
+    click.echo("")
+    
+    # Initialize session
+    session_mgr = SessionManager(base_dir=Path(output))
+    sweep_tag = tag or f"sweep_{datetime.now().strftime('%H%M%S')}"
+    session = session_mgr.create_session(tag=sweep_tag)
+    
+    logger.info(f"Sweep session: {session.session_id}")
+    
+    # Collect batch points
+    batch_points: List[Dict[str, Any]] = []
+    
+    model_path_obj = Path(model_path)
+    
+    click.echo("Running batch sweep...")
+    click.echo("─" * 60)
+    
+    for batch_size in batch_sizes:
+        click.echo(f"\n  Batch size {batch_size:>4}:", nl=False)
+        
+        try:
+            run_config = RunConfig(
+                backend=backend,
+                warmup_iterations=warmup,
+                measurement_iterations=iterations,
+                batch_size=batch_size,
+            )
+            
+            runner = ORTRunner(model_path_obj, config=run_config)
+            results = runner.run_benchmark()
+            
+            # Extract stats
+            latencies = [r.latency_ms for r in results if r.is_measurement]
+            if not latencies:
+                click.echo(click.style(" FAILED (no data)", fg="red"))
+                continue
+            
+            import numpy as np
+            mean_latency_ms = float(np.mean(latencies))
+            throughput_ips = (1000.0 / mean_latency_ms) * batch_size
+            
+            batch_points.append({
+                "batch_size": batch_size,
+                "mean_latency_ms": mean_latency_ms,
+                "std_ms": float(np.std(latencies)),
+                "p99_ms": float(np.percentile(latencies, 99)),
+                "throughput_ips": throughput_ips,
+                "latencies": latencies,
+            })
+            
+            click.echo(click.style(f" {mean_latency_ms:>8.2f}ms  {throughput_ips:>8.1f} infer/s", fg="green"))
+            
+        except Exception as e:
+            logger.error(f"Batch {batch_size} failed: {e}")
+            click.echo(click.style(f" ERROR: {e}", fg="red"))
+    
+    click.echo("\n" + "─" * 60)
+    
+    if len(batch_points) < 2:
+        click.echo(click.style("\nInsufficient data for scaling analysis (need >= 2 batch sizes)", fg="yellow"))
+        sys.exit(1)
+    
+    # Run scaling analysis
+    click.echo(click.style("\n═══ Scaling Analysis ═══", fg="cyan", bold=True))
+    
+    analyzer = BatchScalingAnalyzer()
+    
+    for bp in batch_points:
+        analyzer.add_batch_point(BatchPoint(
+            batch_size=bp["batch_size"],
+            mean_latency_ms=bp["mean_latency_ms"],
+            std_latency_ms=bp["std_ms"],
+            throughput_ips=bp["throughput_ips"],
+            memory_mb=0,  # Would need actual measurement
+            latencies=bp["latencies"],
+        ))
+    
+    analysis = analyzer.analyze()
+    
+    # Display results
+    click.echo(f"\nScaling Efficiency:   {analysis.scaling_efficiency*100:.1f}%")
+    click.echo(f"Saturation Detected:  {'Yes' if analysis.saturation_detected else 'No'}")
+    
+    if analysis.saturation_batch:
+        click.echo(f"Saturation Point:     Batch {analysis.saturation_batch}")
+    
+    click.echo(f"Memory Bound:         {'Yes' if analysis.memory_bound else 'No'}")
+    click.echo(f"Optimal Batch Size:   {analysis.optimal_batch}")
+    
+    # Save artifacts
+    session.save_artifact("sweep_points.json", batch_points)
+    session.save_artifact("scaling_analysis.json", {
+        "scaling_efficiency": analysis.scaling_efficiency,
+        "saturation_detected": analysis.saturation_detected,
+        "saturation_batch": analysis.saturation_batch,
+        "memory_bound": analysis.memory_bound,
+        "optimal_batch": analysis.optimal_batch,
+        "throughput_curve": analysis.throughput_curve,
+        "latency_curve": analysis.latency_curve,
+    })
+    
+    # Generate plot if matplotlib available
+    try:
+        plot_path = session.path / "scaling_curves.png"
+        analyzer.plot_scaling_curves(str(plot_path))
+        click.echo(click.style(f"\n✓ Scaling plot saved: {plot_path}", fg="green"))
+    except Exception:
+        pass
+    
+    click.echo(click.style(f"✓ Sweep session saved: {session.path}", fg="green"))
+
+
+@cli.command()
+@click.option("--port", "-p", default=8501, help="Streamlit port")
+@click.option("--sessions-dir", "-d", default="./aaco_sessions", help="Sessions directory")
+def dashboard(port: int, sessions_dir: str) -> None:
+    """
+    Launch interactive Streamlit dashboard.
+    
+    Opens a web-based UI for browsing sessions, viewing metrics,
+    and comparing benchmark results.
+    """
+    import subprocess
+    
+    click.echo(click.style("\n═══ AACO Dashboard ═══", fg="cyan", bold=True))
+    click.echo(f"Starting Streamlit dashboard on port {port}...")
+    click.echo(f"Sessions directory: {sessions_dir}")
+    
+    # Check if streamlit is available
+    try:
+        import streamlit
+        click.echo(f"Streamlit version: {streamlit.__version__}")
+    except ImportError:
+        click.echo(click.style("\nError: Streamlit not installed", fg="red"))
+        click.echo("Install with: pip install streamlit")
+        sys.exit(1)
+    
+    # Get dashboard app path
+    from pathlib import Path
+    import aaco
+    
+    dashboard_path = Path(aaco.__file__).parent / "dashboard" / "app.py"
+    
+    if not dashboard_path.exists():
+        click.echo(click.style(f"\nError: Dashboard app not found at {dashboard_path}", fg="red"))
+        sys.exit(1)
+    
+    click.echo(f"\nOpen in browser: http://localhost:{port}")
+    click.echo("Press Ctrl+C to stop\n")
+    
+    # Launch streamlit
+    try:
+        subprocess.run([
+            sys.executable, "-m", "streamlit", "run",
+            str(dashboard_path),
+            "--server.port", str(port),
+            "--",
+            "--sessions-dir", sessions_dir,
+        ])
+    except KeyboardInterrupt:
+        click.echo("\nDashboard stopped.")
+
+
 def main() -> None:
     """Main entry point."""
     cli(obj={})

@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from . import plots
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,6 +66,52 @@ class ReportRenderer:
         if gpu_file.exists():
             with open(gpu_file) as f:
                 self.data["gpu_samples"] = json.load(f)
+    
+    def _generate_plots(self) -> Dict[str, str]:
+        """
+        Generate embedded plots for the report.
+        
+        Returns:
+            Dict of plot_name -> base64 PNG string
+        """
+        plots_dict = {}
+        
+        # Latency histogram
+        results = self.data.get("inference_results", {})
+        latencies = results.get("latencies_ms", [])
+        if latencies:
+            plots_dict["latency_histogram"] = plots.create_latency_histogram(
+                latencies, title="Inference Latency Distribution"
+            )
+            plots_dict["latency_timeline"] = plots.create_latency_timeline(
+                latencies, title="Latency Over Iterations"
+            )
+        
+        # Kernel charts
+        kernels = self.data.get("kernel_summary", [])
+        if kernels:
+            plots_dict["kernel_bar"] = plots.create_kernel_bar_chart(
+                kernels, title="Top GPU Kernels by Time"
+            )
+            plots_dict["kernel_duration_hist"] = plots.create_kernel_duration_histogram(
+                kernels, title="Kernel Duration Distribution"
+            )
+        
+        # GPU timeline
+        gpu_samples = self.data.get("gpu_samples", [])
+        if gpu_samples:
+            plots_dict["gpu_timeline"] = plots.create_gpu_timeline(
+                gpu_samples, title="GPU Metrics Over Time"
+            )
+        
+        # Bottleneck radar
+        metrics = self.data.get("metrics", {})
+        if metrics:
+            plots_dict["bottleneck_radar"] = plots.create_bottleneck_radar(
+                metrics, title="Performance Indicators"
+            )
+        
+        return plots_dict
     
     def render_terminal(self) -> str:
         """Render report for terminal output."""
@@ -152,11 +200,16 @@ class ReportRenderer:
         except ImportError:
             return self._render_basic_html()
         
+        # Generate plots
+        generated_plots = self._generate_plots()
+        
         template = Template(HTML_TEMPLATE)
         return template.render(
             data=self.data,
             timestamp=datetime.now().isoformat(),
             session_path=str(self.session_path),
+            plots=generated_plots,
+            embed_plot=plots.embed_plot_in_html,
         )
     
     def _render_basic_html(self) -> str:
@@ -348,6 +401,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             border-left: 4px solid #ffc107;
         }
         
+        .plot-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .plot-unavailable {
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            background: #f9f9f9;
+            border-radius: 8px;
+            font-style: italic;
+        }
+        
+        .plot-section {
+            margin-top: 30px;
+        }
+        
+        .plot-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+            border-left: 4px solid #ffc107;
+        }
+        
         .footer {
             text-align: center;
             padding: 20px;
@@ -510,6 +591,57 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    {% endif %}
+    
+    <!-- Embedded Plots Section -->
+    {% if plots %}
+    <div class="plot-section">
+        {% if plots.latency_histogram %}
+        <div class="card">
+            <h2>📈 Latency Distribution</h2>
+            {{ embed_plot(plots.latency_histogram, "Latency Histogram") }}
+        </div>
+        {% endif %}
+        
+        <div class="grid">
+            {% if plots.latency_timeline %}
+            <div class="card">
+                <h2>📉 Latency Timeline</h2>
+                {{ embed_plot(plots.latency_timeline, "Latency Timeline") }}
+            </div>
+            {% endif %}
+            
+            {% if plots.kernel_bar %}
+            <div class="card">
+                <h2>🔥 Kernel Time Distribution</h2>
+                {{ embed_plot(plots.kernel_bar, "Kernel Bar Chart") }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="grid">
+            {% if plots.kernel_duration_hist %}
+            <div class="card">
+                <h2>⏱️ Kernel Duration Distribution</h2>
+                {{ embed_plot(plots.kernel_duration_hist, "Kernel Duration Histogram") }}
+            </div>
+            {% endif %}
+            
+            {% if plots.gpu_timeline %}
+            <div class="card">
+                <h2>🖥️ GPU Metrics Timeline</h2>
+                {{ embed_plot(plots.gpu_timeline, "GPU Timeline") }}
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if plots.bottleneck_radar %}
+        <div class="card" style="max-width: 600px; margin: 20px auto;">
+            <h2>🎯 Performance Radar</h2>
+            {{ embed_plot(plots.bottleneck_radar, "Bottleneck Radar") }}
+        </div>
+        {% endif %}
     </div>
     {% endif %}
     

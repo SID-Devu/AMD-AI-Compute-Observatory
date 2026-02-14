@@ -15,7 +15,22 @@ from aaco.core.schema import (
     RegressionVerdict,
 )
 
+# High-level API exports
+from aaco.analytics import (
+    DerivedMetricsEngine,
+    BottleneckClassifier,
+    RegressionDetector,
+    BatchScalingAnalyzer,
+    TimelineCorrelator,
+    LaunchTaxAnalyzer,
+)
+
+from aaco.runner import ORTRunner, LLMProfiler
+
+from aaco.graph import ONNXGraphExtractor, OpKernelMapper
+
 __all__ = [
+    # Core
     "Session",
     "SessionManager",
     "SessionMetadata",
@@ -23,5 +38,23 @@ __all__ = [
     "KernelMetrics",
     "BottleneckClassification",
     "RegressionVerdict",
+    
+    # Analytics
+    "DerivedMetricsEngine",
+    "BottleneckClassifier",
+    "RegressionDetector",
+    "BatchScalingAnalyzer",
+    "TimelineCorrelator",
+    "LaunchTaxAnalyzer",
+    
+    # Runner
+    "ORTRunner",
+    "LLMProfiler",
+    
+    # Graph
+    "ONNXGraphExtractor",
+    "OpKernelMapper",
+    
+    # Version
     "__version__",
 ]
