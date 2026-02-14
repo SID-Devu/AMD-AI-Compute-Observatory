@@ -7,22 +7,27 @@ name = "aaco"
 version = "1.0.0"
 description = "AMD AI Compute Observatory - Full-stack observability and performance intelligence for AMD AI workloads"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Proprietary Source-Available"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Sudheer Devu"}
+    {name = "Sudheer Ibrahim Daniel Devu", email = "sudheeridevu@gmail.com"}
+]
+maintainers = [
+    {name = "Sudheer Ibrahim Daniel Devu", email = "sudheeridevu@gmail.com"}
 ]
 keywords = [
     "amd", "rocm", "gpu", "profiling", "observability",
     "ai", "inference", "performance", "benchmark",
-    "onnx", "migraphx", "kernel", "tracing"
+    "onnx", "migraphx", "kernel", "tracing", "performance-analysis",
+    "deep-learning", "machine-learning", "pytorch", "ebpf", "healthcare-ai"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: Other/Proprietary License",
     "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -30,6 +35,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: System :: Monitoring",
     "Topic :: System :: Hardware",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -65,24 +72,36 @@ dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-benchmark>=4.0.0",
     "black>=23.0.0",
     "isort>=5.12.0",
     "flake8>=6.1.0",
     "mypy>=1.6.0",
     "pre-commit>=3.5.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-literate-nav>=0.6.0",
+    "mkdocs-section-index>=0.3.0",
 ]
 all = [
-    "aaco[onnx,dashboard,ml,dev]",
+    "aaco[onnx,dashboard,ml,dev,docs]",
 ]
 
 [project.scripts]
 aaco = "aaco.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/sudheerdevu/AMD-AI-Compute-Observatory"
-Repository = "https://github.com/sudheerdevu/AMD-AI-Compute-Observatory"
-Documentation = "https://github.com/sudheerdevu/AMD-AI-Compute-Observatory/tree/master/docs"
-Issues = "https://github.com/sudheerdevu/AMD-AI-Compute-Observatory/issues"
+Homepage = "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
+Repository = "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
+Documentation = "https://sid-devu.github.io/AMD-AI-Compute-Observatory/"
+Issues = "https://github.com/SID-Devu/AMD-AI-Compute-Observatory/issues"
+Changelog = "https://github.com/SID-Devu/AMD-AI-Compute-Observatory/releases"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -94,11 +113,15 @@ aaco = ["report/templates/*.j2", "report/templates/*.html"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --strict-markers"
 markers = [
-    "slow: marks tests as slow",
+    "slow: marks tests as slow running",
     "rocm: marks tests requiring ROCm",
     "integration: marks integration tests",
+    "gpu: marks tests requiring GPU",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
 ]
 
 [tool.black]
@@ -129,11 +152,23 @@ exclude = ["sessions", "build", "dist"]
 
 [tool.coverage.run]
 source = ["aaco"]
-omit = ["*/tests/*", "*/__pycache__/*"]
+omit = ["*/tests/*", "*/__pycache__/*", "*/conftest.py"]
+branch = true
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
 ]
+fail_under = 70
+show_missing = true
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.bandit]
+exclude_dirs = ["tests", "sessions"]
+skips = ["B101"]

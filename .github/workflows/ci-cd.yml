@@ -1,0 +1,356 @@
+# ============================================================================
+# AACO Complete CI/CD Pipeline
+# ============================================================================
+# Comprehensive CI/CD for AMD AI Compute Observatory
+# © 2026 Sudheer Ibrahim Daniel Devu
+# ============================================================================
+
+name: AACO CI/CD Pipeline
+
+on:
+  push:
+    branches: [master, main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: 'Run integration tests'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  PYTHON_VERSION: "3.10"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # =========================================================================
+  # Code Quality & Linting
+  # =========================================================================
+  lint:
+    name: 🔍 Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install linting tools
+        run: pip install ruff mypy
+
+      - name: Run Ruff linting
+        run: ruff check aaco/ --output-format=github
+
+      - name: Run Ruff formatting check
+        run: ruff format --check aaco/
+
+  type-check:
+    name: 🔬 Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install mypy
+          pip install -e ".[dev]"
+
+      - name: Run MyPy
+        run: mypy aaco/ --ignore-missing-imports --show-error-codes
+        continue-on-error: true
+
+  # =========================================================================
+  # Unit Tests Matrix
+  # =========================================================================
+  unit-tests:
+    name: 🧪 Tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        exclude:
+          - os: macos-latest
+            python-version: "3.12"
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      
+      - name: Run unit tests with coverage
+        run: |
+          pytest tests/unit/ -v --tb=short \
+            --cov=aaco \
+            --cov-report=xml \
+            --cov-report=html \
+            --junitxml=junit.xml
+      
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: unittests
+          name: codecov-aaco
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            junit.xml
+            htmlcov/
+
+  # =========================================================================
+  # Integration Tests
+  # =========================================================================
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/master' ||
+      github.event.inputs.run_integration == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: pip install -e ".[all]"
+      
+      - name: Run integration tests
+        run: pytest tests/integration/ -v --tb=short -m "not rocm"
+
+  # =========================================================================
+  # Security Scanning
+  # =========================================================================
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install security tools
+        run: pip install bandit safety pip-audit
+      
+      - name: Run Bandit security scan
+        run: bandit -r aaco/ -ll --format json -o bandit-report.json
+        continue-on-error: true
+      
+      - name: Run pip-audit
+        run: pip-audit --strict
+        continue-on-error: true
+      
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: bandit-report.json
+
+  # =========================================================================
+  # Documentation Build
+  # =========================================================================
+  docs:
+    name: 📚 Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install documentation dependencies
+        run: |
+          pip install -e ".[dev]"
+          pip install mkdocs mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
+      
+      - name: Build MkDocs
+        run: mkdocs build --strict
+      
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: site/
+
+  # =========================================================================
+  # Docker Build
+  # =========================================================================
+  docker:
+    name: 🐳 Docker Build
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha,prefix=
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =========================================================================
+  # Release & Publish
+  # =========================================================================
+  release:
+    name: 📦 Release
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, security]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+      id-token: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install build tools
+        run: pip install build twine
+      
+      - name: Build package
+        run: python -m build
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # =========================================================================
+  # Deploy Documentation
+  # =========================================================================
+  deploy-docs:
+    name: 🚀 Deploy Docs
+    runs-on: ubuntu-latest
+    needs: [docs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install MkDocs
+        run: pip install mkdocs mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
+      
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force
+
+  # =========================================================================
+  # Performance Benchmarks
+  # =========================================================================
+  benchmark:
+    name: ⚡ Performance Benchmark
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+          pip install pytest-benchmark
+      
+      - name: Run benchmarks
+        run: |
+          pytest tests/benchmarks/ -v --benchmark-json=benchmark.json || true
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark.json

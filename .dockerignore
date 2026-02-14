@@ -1,0 +1,48 @@
+# Docker
+.git
+.github
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+*.egg
+.eggs
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.nox
+
+# Documentation build
+site
+docs/_build
+
+# Sessions and outputs
+sessions/*
+!sessions/.gitkeep
+results/*
+!results/.gitkeep
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key

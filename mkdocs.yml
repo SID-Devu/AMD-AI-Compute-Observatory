@@ -1,0 +1,204 @@
+# ============================================================================
+# AACO MkDocs Configuration
+# ============================================================================
+# Documentation site for AMD AI Compute Observatory
+# © 2026 Sudheer Ibrahim Daniel Devu
+# ============================================================================
+
+site_name: AMD AI Compute Observatory
+site_description: "AACO-Ω∞ - Model-to-Metal Performance Science & Governance Engine"
+site_author: Sudheer Ibrahim Daniel Devu
+site_url: https://sid-devu.github.io/AMD-AI-Compute-Observatory
+
+repo_name: SID-Devu/AMD-AI-Compute-Observatory
+repo_url: https://github.com/SID-Devu/AMD-AI-Compute-Observatory
+
+copyright: "© 2026 Sudheer Ibrahim Daniel Devu. All Rights Reserved."
+
+# =============================================================================
+# Theme Configuration
+# =============================================================================
+theme:
+  name: material
+  custom_dir: docs/overrides
+  language: en
+  
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/memory
+
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+# =============================================================================
+# Navigation
+# =============================================================================
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Configuration: getting-started/configuration.md
+  - User Guide:
+    - Overview: user-guide/overview.md
+    - Laboratory Mode: user-guide/laboratory-mode.md
+    - Profiling: user-guide/profiling.md
+    - Analysis: user-guide/analysis.md
+    - Dashboard: user-guide/dashboard.md
+  - Architecture:
+    - 10 Pillars: architecture/pillars.md
+    - Data Flow: architecture/data-flow.md
+    - Components: architecture/components.md
+  - API Reference:
+    - Core: api/core.md
+    - Collectors: api/collectors.md
+    - Analytics: api/analytics.md
+    - CLI: api/cli.md
+  - Examples:
+    - Basic Usage: examples/basic.md
+    - Advanced Profiling: examples/advanced.md
+    - Custom Collectors: examples/custom-collectors.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+
+# =============================================================================
+# Plugins
+# =============================================================================
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            docstring_section_style: spacy
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            merge_init_into_class: true
+            separate_signature: true
+            signature_crossrefs: true
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - minify:
+      minify_html: true
+
+# =============================================================================
+# Markdown Extensions
+# =============================================================================
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: SID-Devu
+      repo: AMD-AI-Compute-Observatory
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# =============================================================================
+# Extra Configuration
+# =============================================================================
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/SID-Devu
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/sudheerdevu
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation.
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

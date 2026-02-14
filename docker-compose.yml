@@ -1,0 +1,233 @@
+# ============================================================================
+# AACO Docker Compose Configuration
+# ============================================================================
+# Orchestration for AMD AI Compute Observatory services
+# © 2026 Sudheer Ibrahim Daniel Devu
+# ============================================================================
+
+version: "3.9"
+
+services:
+  # ===========================================================================
+  # Main AACO CLI Service
+  # ===========================================================================
+  aaco:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: aaco:latest
+    container_name: aaco-cli
+    volumes:
+      - ./sessions:/app/sessions
+      - ./configs:/app/configs:ro
+      - ./results:/app/results
+    environment:
+      - AACO_CONFIG_DIR=/app/configs
+      - AACO_SESSION_DIR=/app/sessions
+    networks:
+      - aaco-network
+
+  # ===========================================================================
+  # AACO Dashboard (Streamlit)
+  # ===========================================================================
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dashboard
+    image: aaco-dashboard:latest
+    container_name: aaco-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./sessions:/app/sessions:ro
+      - ./configs:/app/configs:ro
+    environment:
+      - AACO_CONFIG_DIR=/app/configs
+      - AACO_SESSION_DIR=/app/sessions
+    depends_on:
+      - aaco
+    networks:
+      - aaco-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Development Environment
+  # ===========================================================================
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    image: aaco-dev:latest
+    container_name: aaco-dev
+    volumes:
+      - .:/workspace
+      - ~/.gitconfig:/root/.gitconfig:ro
+    environment:
+      - PYTHONPATH=/workspace
+    ports:
+      - "8888:8888"  # Jupyter
+      - "8000:8000"  # API
+    networks:
+      - aaco-network
+    stdin_open: true
+    tty: true
+    command: bash
+
+  # ===========================================================================
+  # Jupyter Notebook Server
+  # ===========================================================================
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    image: aaco-jupyter:latest
+    container_name: aaco-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/workspace/notebooks
+      - ./sessions:/workspace/sessions:ro
+      - ./examples:/workspace/examples
+    environment:
+      - JUPYTER_TOKEN=aaco-dev
+    networks:
+      - aaco-network
+    command: >
+      jupyter lab
+      --ip=0.0.0.0
+      --port=8888
+      --no-browser
+      --allow-root
+      --NotebookApp.token=aaco-dev
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Documentation Server
+  # ===========================================================================
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    image: aaco-docs:latest
+    container_name: aaco-docs
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docs:/workspace/docs
+      - ./mkdocs.yml:/workspace/mkdocs.yml
+    networks:
+      - aaco-network
+    command: mkdocs serve -a 0.0.0.0:8080
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Redis Cache (for session storage)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: aaco-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - aaco-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # PostgreSQL (for metrics warehouse)
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: aaco-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=aaco
+      - POSTGRES_PASSWORD=aaco_secret
+      - POSTGRES_DB=aaco_warehouse
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - aaco-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aaco"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Prometheus (for metrics collection)
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aaco-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - aaco-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Grafana (for visualization)
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aaco-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=aaco_admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - aaco-network
+    restart: unless-stopped
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  aaco-network:
+    driver: bridge
+    name: aaco-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  redis-data:
+    name: aaco-redis-data
+  postgres-data:
+    name: aaco-postgres-data
+  prometheus-data:
+    name: aaco-prometheus-data
+  grafana-data:
+    name: aaco-grafana-data
