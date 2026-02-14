@@ -589,6 +589,333 @@ def dashboard(port: int, sessions_dir: str) -> None:
         click.echo("\nDashboard stopped.")
 
 
+# ============================================================================
+# Advanced AACO-X Commands
+# ============================================================================
+
+@cli.command()
+@click.argument("session_path", type=click.Path(exists=True))
+@click.option("--output", "-o", default=None, help="Output JSON path")
+def chi(session_path: str, output: Optional[str]) -> None:
+    """
+    Compute Health Index analysis.
+    
+    Calculates the Compute Health Index (CHI) for a session,
+    providing a composite score [0-100] of overall system health.
+    """
+    from aaco.analytics.feature_store import extract_and_store_features
+    from aaco.analytics.chi import CHICalculator, get_chi_badge
+    
+    session = Path(session_path)
+    
+    click.echo(click.style("\n═══ Compute Health Index ═══", fg="cyan", bold=True))
+    
+    # Extract features
+    session_features, _ = extract_and_store_features(session)
+    
+    # Calculate CHI
+    calculator = CHICalculator()
+    report = calculator.calculate(session_features)
+    
+    # Display results
+    badge = get_chi_badge(report.chi_score)
+    click.echo(f"\n{badge}")
+    click.echo(f"CHI Score: {report.chi_score:.0f}/100")
+    click.echo(f"Rating:    {report.rating.value.upper()}")
+    
+    click.echo(click.style("\n── Component Breakdown ──", fg="yellow"))
+    for comp in report.components:
+        bar_len = int(comp.score * 20)
+        bar = "█" * bar_len + "░" * (20 - bar_len)
+        click.echo(f"  {comp.name:<15} [{bar}] {comp.score:.0%}")
+    
+    if report.strengths:
+        click.echo(click.style("\n✓ Strengths:", fg="green"))
+        for s in report.strengths:
+            click.echo(f"  • {s}")
+    
+    if report.weaknesses:
+        click.echo(click.style("\n⚠ Weaknesses:", fg="yellow"))
+        for w in report.weaknesses:
+            click.echo(f"  • {w}")
+    
+    click.echo(f"\n{report.summary}")
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(report.to_dict(), f, indent=2)
+        click.echo(f"\n✓ Report saved: {output}")
+
+
+@cli.command()
+@click.argument("session_path", type=click.Path(exists=True))
+@click.option("--model-name", "-m", default=None, help="Model name for baseline lookup")
+@click.option("--baseline-dir", "-b", default="./aaco_sessions", help="Baseline sessions directory")
+@click.option("--min-sessions", default=3, help="Minimum baseline sessions required")
+@click.option("--output", "-o", default=None, help="Output JSON path")
+def regression(
+    session_path: str,
+    model_name: Optional[str],
+    baseline_dir: str,
+    min_sessions: int,
+    output: Optional[str],
+) -> None:
+    """
+    Statistical regression analysis against historical baseline.
+    
+    Compares current session metrics against baseline model derived
+    from historical sessions for the same model.
+    """
+    from aaco.analytics.feature_store import FeatureStore, extract_and_store_features
+    from aaco.analytics.regression_guard import RegressionGuard, RegressionSeverity, get_regression_exit_code
+    
+    session = Path(session_path)
+    
+    click.echo(click.style("\n═══ Regression Analysis ═══", fg="cyan", bold=True))
+    
+    # Load/build feature store from baseline directory
+    store = FeatureStore(Path(baseline_dir))
+    
+    # Extract current session features
+    current_features, _ = extract_and_store_features(session, store=None)
+    
+    if model_name:
+        current_features.model_name = model_name
+    
+    click.echo(f"Session:  {session.name}")
+    click.echo(f"Model:    {current_features.model_name or '(unknown)'}")
+    
+    # Run regression analysis
+    guard = RegressionGuard(feature_store=store, min_baseline_sessions=min_sessions)
+    report = guard.check_regression(current_features)
+    
+    if report.baseline_session_count < min_sessions:
+        click.echo(click.style(f"\n⚠ Insufficient baseline data", fg="yellow"))
+        click.echo(f"  Need {min_sessions} sessions, have {report.baseline_session_count}")
+        click.echo("  Run more benchmarks to build baseline history")
+        return
+    
+    click.echo(f"Baseline: {report.baseline_session_count} sessions")
+    
+    # Display verdict
+    if report.has_regression:
+        severity_color = {
+            RegressionSeverity.MILD: "yellow",
+            RegressionSeverity.MODERATE: "yellow",
+            RegressionSeverity.SEVERE: "red",
+            RegressionSeverity.CRITICAL: "red",
+        }.get(report.overall_severity, "white")
+        
+        click.echo(click.style(f"\n⚠ REGRESSION DETECTED", fg=severity_color, bold=True))
+        click.echo(f"Severity:   {report.overall_severity.value.upper()}")
+        click.echo(f"Confidence: {report.overall_confidence:.0%}")
+        
+        click.echo(click.style("\n── Top Regressions ──", fg="yellow"))
+        for r in report.top_regressions[:5]:
+            direction = "↑" if r.z_score > 0 else "↓"
+            click.echo(f"  {r.metric_name:<20} {direction} {r.percent_change:+.1f}% (Z={r.z_score:.2f})")
+        
+        if report.recommendations:
+            click.echo(click.style("\n── Recommendations ──", fg="cyan"))
+            for rec in report.recommendations[:3]:
+                click.echo(f"  • {rec}")
+    else:
+        click.echo(click.style("\n✓ NO REGRESSION DETECTED", fg="green", bold=True))
+    
+    click.echo(f"\n{report.summary}")
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(report.to_dict(), f, indent=2, default=str)
+        click.echo(f"\n✓ Report saved: {output}")
+    
+    # Return exit code for CI/CD
+    exit_code = get_regression_exit_code(report)
+    if exit_code > 2:  # Severe or critical
+        sys.exit(exit_code)
+
+
+@cli.command()
+@click.argument("session_path", type=click.Path(exists=True))
+@click.option("--output", "-o", default=None, help="Output JSON path")
+def analyze(session_path: str, output: Optional[str]) -> None:
+    """
+    Full bottleneck analysis with recommendations.
+    
+    Performs comprehensive analysis to identify performance bottlenecks
+    and generates evidence-based optimization recommendations.
+    """
+    from aaco.analytics.feature_store import extract_and_store_features
+    from aaco.analytics.recommendation_engine import RecommendationEngine
+    from aaco.analytics.chi import CHICalculator
+    
+    session = Path(session_path)
+    
+    click.echo(click.style("\n═══ Performance Analysis ═══", fg="cyan", bold=True))
+    
+    # Extract features
+    session_features, iteration_features = extract_and_store_features(session)
+    
+    # Run recommendation engine
+    engine = RecommendationEngine()
+    analysis = engine.analyze(session_features, iteration_features)
+    
+    # Calculate CHI
+    chi_calc = CHICalculator()
+    chi_report = chi_calc.calculate(session_features)
+    
+    # Display CHI
+    click.echo(f"\nCompute Health Index: {chi_report.chi_score:.0f}/100 ({chi_report.rating.value})")
+    
+    # Display primary bottleneck
+    if analysis.primary_bottleneck:
+        bn = analysis.primary_bottleneck.value.replace("_", " ").title()
+        click.echo(f"Primary Bottleneck:   {bn}")
+    
+    # Top drivers
+    if analysis.top_drivers:
+        click.echo(click.style("\n── Top Performance Drivers ──", fg="yellow"))
+        for i, (driver, impact) in enumerate(analysis.top_drivers, 1):
+            bar_len = int(impact * 20)
+            bar = "█" * bar_len + "░" * (20 - bar_len)
+            click.echo(f"  {i}. {driver:<25} [{bar}] {impact:.0%}")
+    
+    # Recommendations
+    if analysis.recommendations:
+        click.echo(click.style("\n── Recommendations ──", fg="cyan"))
+        for rec in analysis.recommendations[:5]:
+            priority_color = {
+                "critical": "red",
+                "high": "yellow",
+                "medium": "white",
+                "low": "bright_black",
+            }.get(rec.priority.value, "white")
+            
+            click.echo(click.style(f"\n[{rec.priority.value.upper()}] {rec.title}", fg=priority_color, bold=True))
+            click.echo(f"  {rec.description}")
+            
+            if rec.actions:
+                click.echo("  Actions:")
+                for action in rec.actions[:3]:
+                    click.echo(f"    • {action}")
+            
+            if rec.expected_improvement:
+                click.echo(f"  Expected improvement: {rec.expected_improvement}")
+    
+    # Summary
+    summary = engine.get_summary(analysis)
+    click.echo(f"\n{summary}")
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump({
+                "chi": chi_report.to_dict(),
+                "analysis": analysis.to_dict(),
+            }, f, indent=2, default=str)
+        click.echo(f"\n✓ Analysis saved: {output}")
+
+
+@cli.command()
+@click.argument("session_path", type=click.Path(exists=True))
+@click.option("--output", "-o", default=None, help="Output trace path")
+@click.option("--compress", "-z", is_flag=True, help="Compress output (gzip)")
+@click.option("--open", "open_ui", is_flag=True, help="Open in Perfetto UI")
+def perfetto(
+    session_path: str,
+    output: Optional[str],
+    compress: bool,
+    open_ui: bool,
+) -> None:
+    """
+    Export session to Perfetto trace format.
+    
+    Creates a Perfetto-compatible JSON trace that can be visualized
+    in the Perfetto UI (https://ui.perfetto.dev).
+    """
+    from aaco.analytics.perfetto_export import AACOSessionToPerfetto, open_in_perfetto
+    
+    session = Path(session_path)
+    
+    click.echo(click.style("\n═══ Perfetto Export ═══", fg="cyan", bold=True))
+    click.echo(f"Session: {session.name}")
+    
+    # Convert session
+    converter = AACOSessionToPerfetto(session)
+    builder = converter.convert()
+    
+    # Determine output path
+    if output:
+        out_path = Path(output)
+    else:
+        out_path = session / "trace.perfetto.json"
+    
+    # Save trace
+    builder.save_json(out_path, compress=compress)
+    
+    event_count = len(builder._events)
+    click.echo(f"Events exported: {event_count}")
+    click.echo(click.style(f"\n✓ Trace saved: {out_path}", fg="green"))
+    
+    if open_ui:
+        click.echo("\nOpening Perfetto UI...")
+        open_in_perfetto(out_path)
+    else:
+        click.echo("\nTo visualize:")
+        click.echo(f"  1. Open https://ui.perfetto.dev")
+        click.echo(f"  2. Drag and drop: {out_path}")
+
+
+@cli.command()
+@click.argument("session_path", type=click.Path(exists=True))
+@click.option("--store-dir", "-s", default="./aaco_feature_store", help="Feature store directory")
+@click.option("--export", "-e", default=None, help="Export features to JSON")
+def features(
+    session_path: str,
+    store_dir: str,
+    export: Optional[str],
+) -> None:
+    """
+    Extract and store session features.
+    
+    Extracts performance features from a session and stores them
+    in the feature store for baseline comparison and trend analysis.
+    """
+    from aaco.analytics.feature_store import FeatureStore, extract_and_store_features
+    
+    session = Path(session_path)
+    store_path = Path(store_dir)
+    
+    click.echo(click.style("\n═══ Feature Extraction ═══", fg="cyan", bold=True))
+    click.echo(f"Session: {session.name}")
+    
+    # Load or create feature store
+    store = FeatureStore(store_path)
+    
+    # Extract features
+    session_features, iteration_features = extract_and_store_features(session, store)
+    
+    # Display key features
+    click.echo(click.style("\n── Session Features ──", fg="yellow"))
+    click.echo(f"  Latency (mean):    {session_features.latency_mean_ms:.3f} ms")
+    click.echo(f"  Latency (std):     {session_features.latency_std_ms:.3f} ms")
+    click.echo(f"  Throughput:        {session_features.throughput_its:.1f} infer/s")
+    click.echo(f"  CV%:               {session_features.cv_pct:.1f}%")
+    click.echo(f"  Spike ratio:       {session_features.spike_ratio:.1%}")
+    click.echo(f"  KAR:               {session_features.kar:.3f}")
+    click.echo(f"  CHI Score:         {session_features.chi_score:.0f}/100")
+    
+    click.echo(f"\n  Iterations:        {len(iteration_features)}")
+    click.echo(f"  Spikes detected:   {session_features.spike_count}")
+    
+    # Save feature store
+    store.save()
+    click.echo(click.style(f"\n✓ Features saved to: {store_path}", fg="green"))
+    
+    if export:
+        store.export_json(Path(export))
+        click.echo(f"✓ Exported to: {export}")
+
+
 def main() -> None:
     """Main entry point."""
     cli(obj={})
