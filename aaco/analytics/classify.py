@@ -6,13 +6,12 @@ Rule-based and ML-assisted classification of performance bottlenecks.
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from aaco.core.schema import (
     BottleneckClassification,
     DerivedMetrics,
     KernelMetrics,
-    PhaseMetrics,
 )
 
 logger = logging.getLogger(__name__)

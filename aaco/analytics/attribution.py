@@ -6,10 +6,9 @@ with confidence scoring and evidence tracking.
 """
 
 import logging
-from collections import defaultdict
 from dataclasses import dataclass, field, asdict
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -387,7 +386,7 @@ class ProbabilisticAttributionEngine:
                 evidence_scores.append(Evidence(
                     evidence_type=EvidenceType.NAME_MATCH,
                     strength=pattern_score,
-                    description=f"Known pattern match",
+                    description="Known pattern match",
                 ))
             
             # Combine evidences

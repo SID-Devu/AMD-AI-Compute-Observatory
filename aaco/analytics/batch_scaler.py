@@ -5,8 +5,7 @@ Analyzes throughput and latency scaling across batch sizes.
 
 import logging
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional, Tuple
-import json
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
