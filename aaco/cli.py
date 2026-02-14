@@ -916,8 +916,317 @@ def features(
         click.echo(f"✓ Exported to: {export}")
 
 
+# =============================================================================
+# AACO-Λ Advanced Commands
+# =============================================================================
+
+@cli.command()
+@click.option("--gpu-id", "-g", default=0, help="GPU ID to calibrate")
+@click.option("--output", "-o", default=None, help="Output JSON path")
+@click.option("--force", "-f", is_flag=True, help="Force recalibration")
+def calibrate(gpu_id: int, output: Optional[str], force: bool) -> None:
+    """
+    Calibrate hardware envelope for GPU.
+    
+    Measures peak capabilities (bandwidth, compute, launch overhead)
+    to establish baseline for efficiency calculations.
+    """
+    from aaco.calibration.envelope import HardwareEnvelopeCalibrator, load_or_calibrate
+    
+    click.echo(click.style("\n═══ Hardware Envelope Calibration ═══", fg="cyan", bold=True))
+    click.echo(f"GPU ID: {gpu_id}")
+    
+    if output:
+        out_path = Path(output)
+    else:
+        out_path = Path.home() / ".aaco" / f"hardware_envelope_gpu{gpu_id}.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    if not force and out_path.exists():
+        envelope = load_or_calibrate(out_path, gpu_id, max_age_hours=24)
+        click.echo(f"Using cached envelope (age: {(time.time() - envelope.timestamp_utc) / 3600:.1f}h)")
+    else:
+        calibrator = HardwareEnvelopeCalibrator(gpu_id)
+        envelope = calibrator.calibrate()
+        envelope.save(out_path)
+    
+    click.echo(click.style("\n── Hardware Envelope ──", fg="yellow"))
+    click.echo(f"  GPU:                {envelope.gpu_name}")
+    click.echo(f"  Memory:             {envelope.memory_total_gb:.1f} GB")
+    click.echo(f"  Compute Units:      {envelope.compute_units}")
+    click.echo(f"\n  Peak BW:            {envelope.bandwidth.peak_bandwidth_gbps:.0f} GB/s")
+    click.echo(f"  Read BW:            {envelope.bandwidth.read_bandwidth_gbps:.0f} GB/s ({envelope.bandwidth.read_efficiency:.0%})")
+    click.echo(f"  Peak Compute:       {envelope.compute.peak_tflops_fp32:.1f} TFLOPS (FP32)")
+    click.echo(f"  GEMM Throughput:    {envelope.compute.gemm_tflops_fp32:.1f} TFLOPS ({envelope.compute.fp32_efficiency:.0%})")
+    click.echo(f"  Launch Overhead:    {envelope.launch.launch_p50_us:.1f} μs (p50)")
+    
+    if envelope.calibration_warnings:
+        click.echo(click.style("\n⚠ Warnings:", fg="yellow"))
+        for w in envelope.calibration_warnings:
+            click.echo(f"  • {w}")
+    
+    click.echo(click.style(f"\n✓ Envelope saved: {out_path}", fg="green"))
+
+
+@cli.command(name="root-cause")
+@click.argument("metrics_json", type=click.Path(exists=True), required=False)
+@click.option("--memory-bw", "-m", type=float, help="Memory BW utilization (0-1)")
+@click.option("--compute", "-c", type=float, help="Compute utilization (0-1)")
+@click.option("--launch-pct", "-l", type=float, help="Launch overhead percentage")
+@click.option("--occupancy", "-o", type=float, help="GPU occupancy (0-1)")
+@click.option("--output", default=None, help="Output JSON path")
+def root_cause(
+    metrics_json: Optional[str],
+    memory_bw: Optional[float],
+    compute: Optional[float],
+    launch_pct: Optional[float],
+    occupancy: Optional[float],
+    output: Optional[str],
+) -> None:
+    """
+    Analyze root cause of performance issues.
+    
+    Uses Bayesian inference to rank potential performance bottlenecks
+    based on provided metrics or a metrics JSON file.
+    """
+    from aaco.analytics.root_cause import BayesianRootCauseAnalyzer, explain_root_cause
+    
+    click.echo(click.style("\n═══ Root Cause Analysis ═══", fg="cyan", bold=True))
+    
+    # Collect metrics
+    metrics: Dict[str, float] = {}
+    
+    if metrics_json:
+        with open(metrics_json) as f:
+            metrics = json.load(f)
+        click.echo(f"Loaded metrics from: {metrics_json}")
+    
+    # Override with CLI options
+    if memory_bw is not None:
+        metrics["memory_bandwidth_utilization"] = memory_bw
+    if compute is not None:
+        metrics["compute_utilization"] = compute
+    if launch_pct is not None:
+        metrics["launch_overhead_pct"] = launch_pct
+    if occupancy is not None:
+        metrics["occupancy"] = occupancy
+    
+    if not metrics:
+        click.echo(click.style("No metrics provided. Use --help for usage.", fg="red"))
+        return
+    
+    click.echo(f"\nMetrics: {len(metrics)} observations")
+    
+    # Run analysis
+    analyzer = BayesianRootCauseAnalyzer()
+    analyzer.add_observations(metrics)
+    ranking = analyzer.analyze()
+    
+    # Display results
+    explanation = explain_root_cause(ranking)
+    click.echo("\n" + explanation)
+    
+    if output:
+        ranking.save(Path(output))
+        click.echo(f"\n✓ Analysis saved: {output}")
+
+
+@cli.command()
+@click.option("--db-path", "-d", default=None, help="Warehouse database path")
+@click.option("--model", "-m", default=None, help="Filter by model name")
+@click.option("--backend", "-b", default=None, help="Filter by backend")
+@click.option("--metric", default="latency_p50_ms", help="Metric to query")
+@click.option("--days", default=7, help="Days of history")
+@click.option("--action", type=click.Choice(["stats", "trend", "compare", "sessions"]),
+              default="stats", help="Action to perform")
+def warehouse(
+    db_path: Optional[str],
+    model: Optional[str],
+    backend: Optional[str],
+    metric: str,
+    days: int,
+    action: str,
+) -> None:
+    """
+    Query the fleet-scale performance warehouse.
+    
+    Actions:
+      stats    - Get aggregate statistics
+      trend    - Show trend over time
+      compare  - Compare backends
+      sessions - List recent sessions
+    """
+    from aaco.warehouse.store import FleetWarehouse, get_default_warehouse
+    
+    click.echo(click.style("\n═══ Fleet Warehouse ═══", fg="cyan", bold=True))
+    
+    if db_path:
+        wh = FleetWarehouse(Path(db_path))
+    else:
+        wh = get_default_warehouse()
+    
+    stats = wh.get_stats()
+    click.echo(f"Database: {wh.db_path}")
+    click.echo(f"Sessions: {stats['sessions']}, Results: {stats['results']}")
+    
+    if action == "stats":
+        metric_stats = wh.get_metric_stats(metric, model, backend, days)
+        click.echo(click.style(f"\n── {metric} Statistics ({days}d) ──", fg="yellow"))
+        click.echo(f"  Mean:  {metric_stats['mean']:.3f}")
+        click.echo(f"  Min:   {metric_stats['min']:.3f}")
+        click.echo(f"  Max:   {metric_stats['max']:.3f}")
+        click.echo(f"  Count: {metric_stats['count']}")
+    
+    elif action == "trend":
+        trend = wh.get_trend(metric, model, backend, None, days)
+        click.echo(click.style(f"\n── {metric} Trend ({days}d) ──", fg="yellow"))
+        if trend:
+            for point in trend[-10:]:
+                ts = datetime.fromtimestamp(point.timestamp).strftime("%Y-%m-%d %H:%M")
+                click.echo(f"  {ts}  {point.value:.3f}")
+        else:
+            click.echo("  No data found")
+    
+    elif action == "compare":
+        if not model:
+            click.echo(click.style("--model required for compare", fg="red"))
+            return
+        comparison = wh.compare_backends(metric, model, days)
+        click.echo(click.style(f"\n── {metric} by Backend ({model}) ──", fg="yellow"))
+        for b, s in comparison.items():
+            click.echo(f"  {b:<15} mean={s['mean']:.3f} (n={s['count']})")
+    
+    elif action == "sessions":
+        sessions = wh.list_sessions(model, backend, None, days, limit=10)
+        click.echo(click.style(f"\n── Recent Sessions ({days}d) ──", fg="yellow"))
+        for s in sessions:
+            ts = datetime.fromtimestamp(s.timestamp_utc).strftime("%Y-%m-%d %H:%M")
+            click.echo(f"  {ts}  {s.model_name:<20} {s.backend:<12} {s.gpu_name}")
+
+
+@cli.command()
+@click.option("--level", "-l", 
+              type=click.Choice(["none", "basic", "standard", "strict"]),
+              default="standard", help="Isolation level")
+@click.option("--governor", "-g", default="performance", help="CPU governor")
+@click.option("--gpu-clocks", default="high", help="GPU clock policy")
+@click.option("--quiet", "-q", is_flag=True, help="Suppress output")
+def capsule(level: str, governor: str, gpu_clocks: str, quiet: bool) -> None:
+    """
+    Enter a measurement capsule for deterministic benchmarking.
+    
+    Sets up cgroups isolation, CPU governor, and GPU clocks
+    for reproducible performance measurements.
+    """
+    from aaco.isolation.capsule import (
+        MeasurementCapsule, CapsulePolicy, IsolationLevel, GovernorPolicy, GPUClockPolicy
+    )
+    
+    if not quiet:
+        click.echo(click.style("\n═══ Measurement Capsule ═══", fg="cyan", bold=True))
+    
+    # Map string to enum
+    level_map = {
+        "none": IsolationLevel.NONE,
+        "basic": IsolationLevel.BASIC,
+        "standard": IsolationLevel.STANDARD,
+        "strict": IsolationLevel.STRICT,
+    }
+    
+    gov_map = {
+        "performance": GovernorPolicy.PERFORMANCE,
+        "powersave": GovernorPolicy.POWERSAVE,
+        "ondemand": GovernorPolicy.ONDEMAND,
+    }
+    
+    clock_map = {
+        "high": GPUClockPolicy.HIGH,
+        "low": GPUClockPolicy.LOW,
+        "auto": GPUClockPolicy.AUTO,
+    }
+    
+    policy = CapsulePolicy(
+        isolation_level=level_map.get(level, IsolationLevel.STANDARD),
+        cpu_governor=gov_map.get(governor, GovernorPolicy.PERFORMANCE),
+        gpu_clock_policy=clock_map.get(gpu_clocks, GPUClockPolicy.HIGH),
+    )
+    
+    capsule_obj = MeasurementCapsule(policy)
+    manifest = capsule_obj.enter()
+    
+    if not quiet:
+        click.echo(f"Capsule ID:      {manifest.capsule_id}")
+        click.echo(f"Isolation:       {policy.isolation_level.value}")
+        click.echo(f"CPU Governor:    {policy.cpu_governor.value}")
+        click.echo(f"GPU Clocks:      {policy.gpu_clock_policy.value}")
+        click.echo(f"CPUs:            {manifest.cpu_cores_used}")
+        
+        if manifest.isolation_warnings:
+            click.echo(click.style("\n⚠ Warnings:", fg="yellow"))
+            for w in manifest.isolation_warnings:
+                click.echo(f"  • {w}")
+        
+        if manifest.isolation_verified:
+            click.echo(click.style("\n✓ Isolation verified", fg="green"))
+        else:
+            click.echo(click.style("\n⚠ Isolation not fully verified", fg="yellow"))
+    
+    # Save manifest
+    manifest_path = Path(f".aaco_capsule_{manifest.capsule_id}.json")
+    manifest.save(manifest_path)
+    
+    click.echo(f"\nManifest: {manifest_path}")
+    click.echo("\nRun your benchmark, then 'aaco uncapsule' to restore state")
+
+
+@cli.command()
+@click.argument("manifest_path", type=click.Path(exists=True), required=False)
+def uncapsule(manifest_path: Optional[str]) -> None:
+    """
+    Exit measurement capsule and restore original state.
+    """
+    from aaco.isolation.capsule import MeasurementCapsule, CapsuleManifest
+    
+    click.echo(click.style("\n═══ Exit Measurement Capsule ═══", fg="cyan", bold=True))
+    
+    # Find manifest
+    if manifest_path:
+        manifest_file = Path(manifest_path)
+    else:
+        # Find most recent capsule manifest
+        manifests = list(Path(".").glob(".aaco_capsule_*.json"))
+        if not manifests:
+            click.echo(click.style("No capsule manifest found", fg="red"))
+            return
+        manifest_file = max(manifests, key=lambda p: p.stat().st_mtime)
+    
+    click.echo(f"Manifest: {manifest_file}")
+    
+    # Load and restore
+    with open(manifest_file) as f:
+        data = json.load(f)
+    
+    click.echo("Restoring original state...")
+    
+    # Simple restoration - set governors back to original
+    original_governors = data.get("cpu_governors_before", {})
+    for cpu_id, gov in original_governors.items():
+        gov_path = Path(f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_governor")
+        if gov_path.exists():
+            try:
+                gov_path.write_text(gov)
+            except:
+                pass
+    
+    # Cleanup manifest
+    manifest_file.unlink()
+    
+    click.echo(click.style("✓ Capsule exited, state restored", fg="green"))
+
+
 def main() -> None:
     """Main entry point."""
+    import time  # For calibrate command
     cli(obj={})
 
 

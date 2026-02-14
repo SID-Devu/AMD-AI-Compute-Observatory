@@ -1,9 +1,11 @@
 """
 AMD AI Compute Observatory (AACO)
 Full-stack observability and performance intelligence for AMD AI workloads.
+
+AACO-Λ: Model-to-Metal Performance Engineering Platform
 """
 
-__version__ = "2.0.0"  # AACO-X
+__version__ = "3.0.0"  # AACO-Λ
 __author__ = "Sudheer Devu"
 
 from aaco.core.session import Session, SessionManager
@@ -69,6 +71,73 @@ from aaco.analytics.trace_events import (
     EventType,
 )
 
+# AACO-Λ Isolation Layer
+from aaco.isolation import (
+    MeasurementCapsule,
+    CapsulePolicy,
+    CapsuleManifest,
+    IsolationLevel,
+    NoiseSentinel,
+    NoiseReport,
+    NoiseEvent,
+    NoiseSource,
+)
+
+# AACO-Λ Hardware Calibration
+from aaco.calibration import (
+    HardwareEnvelope,
+    HardwareEnvelopeCalibrator,
+    BandwidthEnvelope,
+    ComputeEnvelope,
+    quick_calibrate,
+    load_or_calibrate,
+)
+
+# AACO-Λ Kernel Fingerprinting
+from aaco.analytics.kernel_fingerprint import (
+    KernelFamilyFingerprinter,
+    KernelFingerprint,
+    KernelFamilyRegistry,
+    KernelCategory,
+    KernelEvent,
+)
+
+# AACO-Λ Probabilistic Attribution
+from aaco.analytics.attribution import (
+    ProbabilisticAttributionEngine,
+    AttributionGraph,
+    AttributionResult,
+    AttributionLevel,
+)
+
+# AACO-Λ Bayesian Root Cause
+from aaco.analytics.root_cause import (
+    BayesianRootCauseAnalyzer,
+    RootCauseRanking,
+    RootCauseSuspect,
+    RootCauseCategory,
+    explain_root_cause,
+)
+
+# AACO-Λ Auto-Experiment
+from aaco.experiment import (
+    AutoExperimentEngine,
+    ExperimentConfig,
+    ExperimentResult,
+    ExperimentRunner,
+    Hypothesis,
+    quick_ab_test,
+)
+
+# AACO-Λ Fleet Warehouse
+from aaco.warehouse import (
+    FleetWarehouse,
+    SessionMetadata as WarehouseSessionMetadata,
+    BenchmarkResult,
+    TrendPoint,
+    get_default_warehouse,
+)
+
 __all__ = [
     # Core
     "Session",
@@ -127,6 +196,59 @@ __all__ = [
     # Graph
     "ONNXGraphExtractor",
     "OpKernelMapper",
+    
+    # AACO-Λ Isolation
+    "MeasurementCapsule",
+    "CapsulePolicy",
+    "CapsuleManifest",
+    "IsolationLevel",
+    "NoiseSentinel",
+    "NoiseReport",
+    "NoiseEvent",
+    "NoiseSource",
+    
+    # AACO-Λ Calibration
+    "HardwareEnvelope",
+    "HardwareEnvelopeCalibrator",
+    "BandwidthEnvelope",
+    "ComputeEnvelope",
+    "quick_calibrate",
+    "load_or_calibrate",
+    
+    # AACO-Λ Kernel Fingerprinting
+    "KernelFamilyFingerprinter",
+    "KernelFingerprint",
+    "KernelFamilyRegistry",
+    "KernelCategory",
+    "KernelEvent",
+    
+    # AACO-Λ Attribution
+    "ProbabilisticAttributionEngine",
+    "AttributionGraph",
+    "AttributionResult",
+    "AttributionLevel",
+    
+    # AACO-Λ Root Cause
+    "BayesianRootCauseAnalyzer",
+    "RootCauseRanking",
+    "RootCauseSuspect",
+    "RootCauseCategory",
+    "explain_root_cause",
+    
+    # AACO-Λ Experiment
+    "AutoExperimentEngine",
+    "ExperimentConfig",
+    "ExperimentResult",
+    "ExperimentRunner",
+    "Hypothesis",
+    "quick_ab_test",
+    
+    # AACO-Λ Warehouse
+    "FleetWarehouse",
+    "WarehouseSessionMetadata",
+    "BenchmarkResult",
+    "TrendPoint",
+    "get_default_warehouse",
     
     # Version
     "__version__",
