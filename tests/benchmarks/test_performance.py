@@ -9,6 +9,18 @@ Performance benchmarks for critical paths.
 import pytest
 import numpy as np
 
+# Check if aaco modules are available
+try:
+    from aaco import analytics, collectors
+    AACO_AVAILABLE = True
+except ImportError:
+    AACO_AVAILABLE = False
+
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.skipif(not AACO_AVAILABLE, reason="aaco modules not installed")
+]
+
 
 @pytest.fixture
 def large_dataset():
@@ -20,7 +32,6 @@ def large_dataset():
 class TestStatisticsBenchmarks:
     """Benchmarks for statistical functions."""
     
-    @pytest.mark.slow
     def test_summary_performance(self, benchmark, large_dataset):
         """Benchmark StatisticalSummary computation."""
         from aaco.analytics import StatisticalSummary

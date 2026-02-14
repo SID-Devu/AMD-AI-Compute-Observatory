@@ -10,6 +10,15 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock
 
+# Check if aaco.analytics module is available
+try:
+    from aaco import analytics
+    ANALYTICS_AVAILABLE = True
+except ImportError:
+    ANALYTICS_AVAILABLE = False
+
+pytestmark = pytest.mark.skipif(not ANALYTICS_AVAILABLE, reason="aaco.analytics module not installed")
+
 
 class TestStatisticalSummary:
     """Tests for StatisticalSummary class."""

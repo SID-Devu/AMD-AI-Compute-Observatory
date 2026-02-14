@@ -10,6 +10,15 @@ import pytest
 import time
 from unittest.mock import MagicMock, patch
 
+# Check if aaco.collectors module is available
+try:
+    from aaco import collectors
+    COLLECTORS_AVAILABLE = True
+except ImportError:
+    COLLECTORS_AVAILABLE = False
+
+pytestmark = pytest.mark.skipif(not COLLECTORS_AVAILABLE, reason="aaco.collectors module not installed")
+
 
 class TestTimingCollector:
     """Tests for TimingCollector."""

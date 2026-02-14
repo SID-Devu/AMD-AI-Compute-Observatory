@@ -10,6 +10,16 @@ import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 
+# Check if aaco module is available
+try:
+    from aaco.core import Observatory
+    AACO_AVAILABLE = True
+except ImportError:
+    AACO_AVAILABLE = False
+    Observatory = None
+
+pytestmark = pytest.mark.skipif(not AACO_AVAILABLE, reason="aaco.core module not installed")
+
 
 class TestObservatoryInit:
     """Tests for Observatory initialization."""
