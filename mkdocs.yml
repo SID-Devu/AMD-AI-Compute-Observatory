@@ -119,13 +119,6 @@ plugins:
             merge_init_into_class: true
             separate_signature: true
             signature_crossrefs: true
-  - gen-files:
-      scripts:
-        - docs/gen_ref_pages.py
-  - literate-nav:
-      nav_file: SUMMARY.md
-  - minify:
-      minify_html: true
 
 # =============================================================================
 # Markdown Extensions
