@@ -1,35 +1,60 @@
-# Contributing to AACO
+<div align="center">
 
-Thank you for your interest in contributing to the AMD AI Compute Observatory (AACO)!
+# 🤝 Contributing to AACO-SIGMA
 
-## Development Setup
+**Thank you for your interest in contributing to the AMD AI Compute Observatory!**
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/sudheerdevu/AMD-AI-Compute-Observatory.git
-   cd AMD-AI-Compute-Observatory
-   ```
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/pulls)
+[![Contributors](https://img.shields.io/github/contributors/SID-Devu/AMD-AI-Compute-Observatory?style=flat-square)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/graphs/contributors)
 
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # or: venv\Scripts\activate  # Windows
-   ```
+</div>
 
-3. Install in development mode:
-   ```bash
-   pip install -e ".[dev,full]"
-   ```
+---
 
-4. Run tests:
-   ```bash
-   pytest tests/unit/ -v
-   ```
+## 📋 Table of Contents
 
-## Code Style
+- [Development Setup](#-development-setup)
+- [Code Style](#-code-style)
+- [Testing](#-testing)
+- [Pull Request Process](#-pull-request-process)
+- [Architecture Guidelines](#-architecture-guidelines)
 
-We use **Ruff** for linting and formatting:
+---
+
+## 🛠️ Development Setup
+
+### Prerequisites
+
+- Python 3.10+
+- ROCm 6.0+ (for GPU features)
+- Git
+
+### Quick Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/SID-Devu/AMD-AI-Compute-Observatory.git
+cd AMD-AI-Compute-Observatory
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or: venv\Scripts\activate  # Windows
+
+# 3. Install in development mode with all dependencies
+pip install -e ".[dev,full]"
+
+# 4. Verify setup
+pytest tests/unit/ -v --tb=short
+```
+
+---
+
+## ✨ Code Style
+
+We maintain high code quality standards using modern Python tooling.
+
+### Linting & Formatting (Ruff)
 
 ```bash
 # Check linting
@@ -42,109 +67,171 @@ ruff format aaco/
 ruff check --fix aaco/
 ```
 
-Configuration is in `pyproject.toml`.
+### Type Checking (MyPy)
 
-## Type Hints
-
-All code should include type hints. We use **MyPy** for type checking:
+All code **must** include type hints:
 
 ```bash
 mypy aaco/ --ignore-missing-imports
 ```
 
-## Testing
+### Example Code Style
 
-### Unit Tests
-- Located in `tests/unit/`
-- Run with: `pytest tests/unit/ -v`
-- Should not require external dependencies (mock when needed)
+```python
+from dataclasses import dataclass
+from typing import Optional, List
 
-### Integration Tests
-- Located in `tests/integration/`
-- May require ONNX Runtime, rocprof, rocm-smi
-- Set `AACO_RUN_INTEGRATION=1` to enable
+@dataclass
+class BottleneckResult:
+    """Result of bottleneck classification analysis.
+    
+    Attributes:
+        category: The detected bottleneck category.
+        confidence: Confidence score between 0 and 1.
+        evidence: List of evidence signals supporting classification.
+    """
+    category: str
+    confidence: float
+    evidence: List[dict]
+    recommendation: Optional[str] = None
+```
+
+---
+
+## 🧪 Testing
+
+### Test Categories
+
+| Type | Location | Command | Requirements |
+|------|----------|---------|--------------|
+| **Unit** | `tests/unit/` | `pytest tests/unit -v` | None |
+| **Integration** | `tests/integration/` | `pytest tests/integration -v` | ROCm |
+
+### Running Tests
+
+```bash
+# Fast unit tests
+pytest tests/unit -v
+
+# Integration tests (requires ROCm)
+AACO_RUN_INTEGRATION=1 pytest tests/integration -v
+
+# Full suite with coverage
+pytest --cov=aaco --cov-report=html --cov-report=term
+```
 
 ### Writing Tests
+
 ```python
 import pytest
-from aaco.core.session import Session
+from aaco.analytics.classify import BottleneckClassifier
 
-class TestNewFeature:
-    def test_basic_functionality(self):
-        """Test description."""
-        result = my_function()
-        assert result == expected
+class TestBottleneckClassifier:
+    """Tests for BottleneckClassifier."""
     
-    def test_edge_case(self):
-        """Test edge case handling."""
-        with pytest.raises(ValueError):
-            my_function(invalid_input)
+    def test_launch_bound_detection(self):
+        """Should detect launch-bound workloads correctly."""
+        classifier = BottleneckClassifier()
+        metrics = {"microkernel_pct": 0.8, "launch_rate": 15000}
+        
+        result = classifier.classify(metrics)
+        
+        assert result.category == "launch-bound"
+        assert result.confidence > 0.7
+    
+    def test_invalid_input_raises(self):
+        """Should raise ValueError for invalid input."""
+        classifier = BottleneckClassifier()
+        
+        with pytest.raises(ValueError, match="metrics cannot be empty"):
+            classifier.classify({})
 ```
 
-## Pull Request Process
+---
 
-1. **Fork** the repository
-2. **Create a branch** for your feature/fix:
-   ```bash
-   git checkout -b feature/my-new-feature
-   ```
-3. **Make changes** following our code style
-4. **Add tests** for new functionality
-5. **Update documentation** if needed
-6. **Run tests** to ensure everything passes
-7. **Commit** with clear messages:
-   ```bash
-   git commit -m "feat: Add new bottleneck classifier for data transfer"
-   ```
-8. **Push** to your fork and create a **Pull Request**
+## 🔀 Pull Request Process
 
-## Commit Message Convention
+### 1️⃣ Fork & Branch
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+```bash
+# Fork on GitHub, then clone your fork
+git clone https://github.com/YOUR_USERNAME/AMD-AI-Compute-Observatory.git
+cd AMD-AI-Compute-Observatory
 
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `test:` - Test additions/changes
-- `refactor:` - Code refactoring
-- `perf:` - Performance improvements
-- `chore:` - Maintenance tasks
-
-Examples:
-```
-feat: Add thermal throttle detection to bottleneck classifier
-fix: Handle empty rocprof CSV files gracefully
-docs: Update architecture diagram with new analytics module
-test: Add unit tests for regression detector
+# Create feature branch
+git checkout -b feature/my-awesome-feature
 ```
 
-## Architecture Guidelines
+### 2️⃣ Make Changes
+
+- Follow code style guidelines
+- Add tests for new functionality
+- Update documentation if needed
+
+### 3️⃣ Commit with Conventional Commits
+
+```bash
+git commit -m "feat: Add thermal throttle detection to classifier"
+```
+
+| Prefix | Description |
+|--------|-------------|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `docs:` | Documentation |
+| `test:` | Test changes |
+| `refactor:` | Code refactoring |
+| `perf:` | Performance |
+| `chore:` | Maintenance |
+
+### 4️⃣ Push & Create PR
+
+```bash
+git push origin feature/my-awesome-feature
+```
+
+Then create a Pull Request on GitHub.
+
+---
+
+## 🏗️ Architecture Guidelines
 
 ### Adding a New Collector
-1. Create file in `aaco/collectors/`
-2. Implement `start()`, `stop()`, `get_samples()` interface
-3. Add to `__init__.py` exports
-4. Document sample schema in `docs/data_schema.md`
+
+```
+1. Create file: aaco/collectors/my_collector.py
+2. Implement interface: start(), stop(), get_samples()
+3. Export in: aaco/collectors/__init__.py
+4. Document in: docs/data_schema.md
+```
 
 ### Adding a New Bottleneck Category
-1. Add to `BottleneckCategory` enum in `classify.py`
-2. Implement detection rules in `BottleneckClassifier`
-3. Add recommendations mapping
-4. Document in `docs/bottleneck_taxonomy.md`
+
+```
+1. Add to enum: BottleneckCategory in classify.py
+2. Implement rules: BottleneckClassifier
+3. Add recommendation: in recommendations mapping
+4. Document: docs/bottleneck_taxonomy.md
+```
 
 ### Adding a New CLI Command
-1. Add command function in `cli.py` with `@cli.command()` decorator
-2. Use Click options/arguments for parameters
-3. Add help text and examples
-4. Test with Click's `CliRunner`
 
-## Documentation
+```python
+@cli.command()
+@click.option('--model', required=True, help='Model name')
+def my_command(model: str):
+    """Brief description of command."""
+    # Implementation
+```
 
-- **Code Comments**: Explain *why*, not *what*
-- **Docstrings**: Use Google-style docstrings
-- **README**: Keep examples up to date
-- **Architecture**: Update `docs/architecture.md` for structural changes
+---
 
-## Questions?
+<div align="center">
 
-Open an issue for questions or discussion about contributions.
+## ❓ Questions?
+
+Open an [issue](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/issues) or start a [discussion](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/discussions).
+
+**Thank you for contributing to AACO-SIGMA! 🎉**
+
+</div>
