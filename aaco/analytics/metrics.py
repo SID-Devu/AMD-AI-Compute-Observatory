@@ -10,13 +10,13 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from aaco.core.schema import (
-    InferenceResult,
+    InferenceIteration,
     KernelMetrics,
-    SystemSample,
-    GPUSample,
     DerivedMetrics,
     PhaseMetrics,
 )
+from aaco.collectors.sys_sampler import SystemSample
+from aaco.collectors.rocm_smi_sampler import GPUSample
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +28,12 @@ class DerivedMetricsEngine:
     """
     
     def __init__(self):
-        self.inference_results: List[InferenceResult] = []
+        self.inference_results: List[InferenceIteration] = []
         self.kernel_metrics: Optional[KernelMetrics] = None
         self.sys_samples: List[SystemSample] = []
         self.gpu_samples: List[GPUSample] = []
     
-    def add_inference_results(self, results: List[InferenceResult]) -> None:
+    def add_inference_results(self, results: List[InferenceIteration]) -> None:
         """Add inference timing results."""
         self.inference_results.extend(results)
     

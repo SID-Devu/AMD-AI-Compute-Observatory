@@ -131,6 +131,26 @@ class InferenceIteration:
 
 
 @dataclass
+class PhaseMetrics:
+    """Metrics for a specific execution phase (warmup/measurement)."""
+    name: str
+    iterations: int
+    total_time_ms: float
+    mean_ms: float
+    std_ms: float
+    p50_ms: float
+    p90_ms: float
+    p99_ms: float
+    min_ms: float
+    max_ms: float
+    iqr_ms: float
+    cov_pct: float
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
 class InferenceResult:
     """Aggregated inference results with percentiles."""
     iterations: int
@@ -365,40 +385,24 @@ class RegressionVerdict:
 @dataclass
 class DerivedMetrics:
     """All derived performance metrics for a session."""
-    # Inference metrics
-    latency_p50_ms: float
-    latency_p90_ms: float
-    latency_p99_ms: float
-    throughput_samples_per_sec: float
-    stability_score: float  # 1 - CV, higher is better
+    # Per-phase metrics
+    warmup_phase: "PhaseMetrics"
+    measurement_phase: "PhaseMetrics"
     
-    # Kernel metrics
-    kernel_launch_count: int
-    avg_kernel_duration_us: float
-    microkernel_pct: float
-    launch_tax_score: float
-    kernel_amplification_ratio: float
-    gpu_active_ratio: float
-    
-    # System metrics
-    avg_cpu_pct: float
-    max_cpu_pct: float
-    ctx_switch_rate: float
-    majfault_rate: float
-    cpu_noise_score: float
-    
-    # GPU metrics
-    avg_gpu_util_pct: float
-    avg_power_w: float
-    clock_variance_score: float
-    thermal_headroom: float
-    
-    # Bottleneck indicators (0-1 scale)
-    launch_bound_indicator: float
-    cpu_bound_indicator: float
-    memory_bound_indicator: float
-    compute_bound_indicator: float
-    throttling_indicator: float
+    # Aggregated metrics by category (Dict[str, float])
+    throughput: Dict[str, Any]
+    efficiency: Dict[str, Any]
+    latency: Dict[str, Any]
+    system: Dict[str, Any]
+    gpu: Dict[str, Any]
     
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        return {
+            "warmup_phase": self.warmup_phase.to_dict(),
+            "measurement_phase": self.measurement_phase.to_dict(),
+            "throughput": self.throughput,
+            "efficiency": self.efficiency,
+            "latency": self.latency,
+            "system": self.system,
+            "gpu": self.gpu,
+        }

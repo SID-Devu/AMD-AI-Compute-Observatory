@@ -83,11 +83,3 @@ class TestROCmSMISampler:
         from aaco.collectors.rocm_smi_sampler import ROCmSMISampler, GPUSample
         assert ROCmSMISampler is not None
         assert GPUSample is not None
-    
-    @pytest.mark.skipif(True, reason="Requires ROCm installed")
-    def test_create_sampler_with_rocm(self):
-        """Test ROCmSMISampler with actual ROCm (skip if not available)."""
-        from aaco.collectors.rocm_smi_sampler import ROCmSMISampler
-        
-        sampler = ROCmSMISampler()
-        assert sampler is not None

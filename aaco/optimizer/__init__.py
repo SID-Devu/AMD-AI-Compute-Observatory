@@ -18,7 +18,7 @@ from aaco.optimizer.auto_optimizer import (
     ExperimentConfig,
     ExperimentResult,
     AutoOptimizationEngine,
-    create_optimizer,
+    create_auto_optimizer,
 )
 
 __all__ = [
@@ -28,5 +28,5 @@ __all__ = [
     'ExperimentConfig',
     'ExperimentResult',
     'AutoOptimizationEngine',
-    'create_optimizer',
+    'create_auto_optimizer',
 ]
