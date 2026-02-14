@@ -61,6 +61,37 @@ class ROCmSMISampler:
         result = run_command(["rocm-smi", "--version"])
         return result is not None
 
+    def _get_gpu_info(self) -> Optional[Dict]:
+        """Get GPU information from rocm-smi."""
+        if not self._available:
+            return None
+        
+        result = run_command(["rocm-smi", "-d", str(self.device_id), "--showproductname", "--showmeminfo", "vram"])
+        if not result:
+            return None
+        
+        info = {
+            "name": "AMD GPU",
+            "vram_total_mb": 0,
+        }
+        
+        for line in result.split("\n"):
+            if "Card series" in line or "GPU" in line:
+                parts = line.split(":")
+                if len(parts) > 1:
+                    info["name"] = parts[1].strip()
+            elif "Total Memory" in line or "vram Total" in line.lower():
+                match = re.search(r"(\d+)", line)
+                if match:
+                    # Value might be in bytes or MB depending on rocm-smi version
+                    val = int(match.group(1))
+                    if val > 1000000:  # Likely bytes
+                        info["vram_total_mb"] = val // (1024 * 1024)
+                    else:
+                        info["vram_total_mb"] = val
+        
+        return info
+
     @property
     def available(self) -> bool:
         """Check if ROCm-SMI sampling is available."""

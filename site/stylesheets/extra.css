@@ -1,0 +1,80 @@
+/* Extra CSS for AACO Documentation */
+
+:root {
+  --amd-red: #ED1C24;
+  --amd-dark: #1a1a1a;
+}
+
+/* AMD branding */
+.md-header {
+  background-color: var(--amd-red);
+}
+
+[data-md-color-scheme="slate"] .md-header {
+  background-color: var(--amd-dark);
+}
+
+/* Logo styling */
+.md-logo img {
+  height: 2rem;
+}
+
+/* Code blocks */
+.highlight pre {
+  border-radius: 8px;
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--amd-red);
+  color: white;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background-color: #333;
+}
+
+/* Admonitions */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: var(--amd-red);
+}
+
+.md-typeset .admonition.tip > .admonition-title,
+.md-typeset details.tip > summary {
+  background-color: rgba(237, 28, 36, 0.1);
+}
+
+/* Cards */
+.md-typeset .grid.cards > ul > li {
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Footer */
+.md-footer {
+  background-color: var(--amd-dark);
+}
+
+/* Custom warning for proprietary notice */
+.proprietary-notice {
+  background: linear-gradient(135deg, #ED1C24 0%, #8B0000 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.proprietary-notice a {
+  color: #FFD700;
+}

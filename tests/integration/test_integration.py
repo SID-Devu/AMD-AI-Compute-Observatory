@@ -79,18 +79,19 @@ class TestSessionIntegration:
             manager = SessionManager(base_dir=Path(tmpdir))
             
             # Create session
-            session = manager.create_session(tag="integration_test")
+            session = manager.create_session(model_name="test_model", backend="cpu")
+            session.initialize()  # Creates session.json and metadata
             
             # Save various artifacts
-            session.save_artifact("test_data.json", {"key": "value", "number": 42})
-            session.save_artifact("list_data.json", [1, 2, 3, 4, 5])
+            session.save_artifact("misc", "test_data.json", {"key": "value", "number": 42})
+            session.save_artifact("misc", "list_data.json", [1, 2, 3, 4, 5])
             
             # Verify artifacts exist
-            assert (session.path / "test_data.json").exists()
-            assert (session.path / "list_data.json").exists()
+            assert (session.session_dir / "misc" / "test_data.json").exists()
+            assert (session.session_dir / "misc" / "list_data.json").exists()
             
             # Verify content
-            with open(session.path / "test_data.json") as f:
+            with open(session.session_dir / "misc" / "test_data.json") as f:
                 data = json.load(f)
                 assert data["key"] == "value"
             

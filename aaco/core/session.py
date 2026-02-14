@@ -359,6 +359,7 @@ class Session:
     def save_artifact(self, category: str, filename: str, data: Any) -> Path:
         """Save an artifact (JSON, parquet, or raw)."""
         path = self.get_artifact_path(category, filename)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         if filename.endswith(".json"):
             safe_json_dump(data, path)
