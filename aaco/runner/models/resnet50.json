@@ -1,0 +1,52 @@
+{
+  "model_id": "resnet50",
+  "display_name": "ResNet-50",
+  "category": "vision",
+  "framework": "pytorch",
+  
+  "architecture": {
+    "type": "cnn",
+    "layers": 50,
+    "parameters": 25557032,
+    "input_shape": [3, 224, 224],
+    "output_shape": [1000]
+  },
+  
+  "default_config": {
+    "batch_size": 64,
+    "precision": "fp16",
+    "channels_last": true
+  },
+  
+  "profiling": {
+    "warmup_iterations": 10,
+    "profile_iterations": 100,
+    "key_kernels": [
+      "Conv2D_7x7_s2",
+      "Conv2D_3x3",
+      "Conv2D_1x1",
+      "BatchNorm",
+      "ReLU",
+      "MaxPool",
+      "AvgPool",
+      "GEMM"
+    ]
+  },
+  
+  "benchmarks": {
+    "mi300x": {
+      "expected_throughput_min": 4500,
+      "expected_latency_max_ms": 15.0
+    },
+    "mi250x": {
+      "expected_throughput_min": 2500,
+      "expected_latency_max_ms": 25.0
+    }
+  },
+  
+  "sources": {
+    "torchvision": "torchvision.models.resnet50(pretrained=True)",
+    "huggingface": null,
+    "onnx_zoo": "https://github.com/onnx/models/raw/main/vision/classification/resnet/model/resnet50-v2-7.onnx"
+  }
+}

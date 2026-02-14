@@ -85,13 +85,18 @@ Thumbs.db
 
 # AACO specific
 aaco_sessions/
-sessions/
 *.parquet
 *.onnx
 *.pb
-models/
 output/
 reports/
+
+# Keep session examples and model configs
+!sessions/README.md
+!sessions/session_schema.json
+!sessions/example_session.json
+!aaco/runner/models/*.json
+!aaco/runner/models/README.md
 
 # Profiling output
 rocprof*/

@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AACO Session Schema",
+  "description": "Schema for AACO profiling session files",
+  "type": "object",
+  "required": ["session_id", "metadata", "environment"],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Unique session identifier"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name", "created_at", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "ended_at": { "type": "string", "format": "date-time" },
+        "version": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "hostname": { "type": "string" },
+        "os": { "type": "string" },
+        "kernel": { "type": "string" },
+        "rocm_version": { "type": "string" },
+        "gpu_info": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "device_id": { "type": "integer" },
+              "name": { "type": "string" },
+              "arch": { "type": "string" },
+              "memory_gb": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "model_name": { "type": "string" },
+        "batch_size": { "type": "integer" },
+        "precision": { "type": "string" },
+        "custom_params": { "type": "object" }
+      }
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trace_id": { "type": "string" },
+          "source": { "type": "string" },
+          "event_count": { "type": "integer" },
+          "file_path": { "type": "string" }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "latency_ms": { "type": "number" },
+        "throughput": { "type": "number" },
+        "memory_peak_mb": { "type": "number" },
+        "kernel_metrics": { "type": "object" }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "bottlenecks": { "type": "array" },
+        "recommendations": { "type": "array" },
+        "root_causes": { "type": "array" }
+      }
+    }
+  }
+}

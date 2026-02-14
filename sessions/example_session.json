@@ -1,0 +1,112 @@
+{
+  "session_id": "sess_20260214_001",
+  "metadata": {
+    "name": "llama2-7b-inference-perf",
+    "description": "Performance profiling of LLaMA2-7B inference on MI300X",
+    "created_at": "2026-02-14T09:00:00Z",
+    "ended_at": "2026-02-14T09:15:32Z",
+    "version": "1.0.0",
+    "tags": ["llm", "inference", "mi300x", "fp16"]
+  },
+  "environment": {
+    "hostname": "gpu-node-01",
+    "os": "Ubuntu 22.04.3 LTS",
+    "kernel": "5.15.0-91-generic",
+    "rocm_version": "6.2.0",
+    "hip_version": "6.2.41133",
+    "gpu_info": [
+      {
+        "device_id": 0,
+        "name": "AMD Instinct MI300X",
+        "arch": "gfx942",
+        "memory_gb": 192.0,
+        "compute_units": 304
+      }
+    ],
+    "python_version": "3.11.5",
+    "pytorch_version": "2.4.0+rocm6.2"
+  },
+  "configuration": {
+    "model_name": "llama2-7b",
+    "model_path": "/models/llama2-7b-hf",
+    "batch_size": 1,
+    "sequence_length": 2048,
+    "precision": "fp16",
+    "custom_params": {
+      "use_flash_attention": true,
+      "kv_cache_dtype": "fp16",
+      "max_new_tokens": 256
+    }
+  },
+  "traces": [
+    {
+      "trace_id": "trace_rocprof_001",
+      "source": "rocprof",
+      "event_count": 15234,
+      "file_path": "traces/rocprof_20260214_090000.csv"
+    },
+    {
+      "trace_id": "trace_pytorch_001",
+      "source": "pytorch_profiler",
+      "event_count": 8521,
+      "file_path": "traces/pytorch_trace_20260214.json"
+    }
+  ],
+  "metrics": {
+    "latency_ms": 45.2,
+    "throughput_tokens_per_sec": 117.6,
+    "memory_peak_mb": 14500,
+    "prefill_time_ms": 38.5,
+    "decode_time_per_token_ms": 8.5,
+    "kernel_metrics": {
+      "MFMA_GEMM_Q": {
+        "avg_latency_us": 85.3,
+        "total_time_pct": 12.5,
+        "occupancy": 0.92
+      },
+      "SoftmaxAttention": {
+        "avg_latency_us": 42.5,
+        "total_time_pct": 8.2,
+        "occupancy": 0.85
+      },
+      "MLP_Up": {
+        "avg_latency_us": 125.8,
+        "total_time_pct": 18.5,
+        "occupancy": 0.94
+      }
+    }
+  },
+  "analysis": {
+    "bottlenecks": [
+      {
+        "type": "memory_bound",
+        "kernel": "SoftmaxAttention",
+        "severity": "medium",
+        "details": "Attention kernel is memory-bound at 85% roofline efficiency"
+      }
+    ],
+    "recommendations": [
+      {
+        "id": "rec_001",
+        "category": "optimization",
+        "title": "Enable Flash Attention v2",
+        "description": "Consider upgrading to Flash Attention v2 for better memory efficiency",
+        "expected_improvement": "10-15% latency reduction"
+      }
+    ],
+    "root_causes": [
+      {
+        "rank": 1,
+        "category": "memory",
+        "description": "KV cache memory transfers limiting decode throughput",
+        "confidence": 0.85,
+        "evidence": ["High L2 cache miss rate", "Memory bandwidth saturation"]
+      }
+    ]
+  },
+  "artifacts": {
+    "reports": ["reports/session_report.html"],
+    "plots": ["plots/roofline.png", "plots/timeline.png"],
+    "raw_data": ["raw/counters.csv"]
+  }
+}

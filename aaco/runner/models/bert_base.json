@@ -1,0 +1,66 @@
+{
+  "model_id": "bert-base",
+  "display_name": "BERT Base",
+  "category": "nlp",
+  "framework": "pytorch",
+  
+  "architecture": {
+    "type": "transformer_encoder",
+    "layers": 12,
+    "hidden_size": 768,
+    "num_attention_heads": 12,
+    "intermediate_size": 3072,
+    "vocab_size": 30522,
+    "parameters": 110000000,
+    "max_sequence_length": 512
+  },
+  
+  "default_config": {
+    "batch_size": 32,
+    "sequence_length": 128,
+    "precision": "fp16"
+  },
+  
+  "profiling": {
+    "warmup_iterations": 10,
+    "profile_iterations": 100,
+    "key_kernels": [
+      "MatMul_QK",
+      "MatMul_V",
+      "Softmax",
+      "LayerNorm",
+      "GELU",
+      "Linear_FFN1",
+      "Linear_FFN2",
+      "Embedding"
+    ]
+  },
+  
+  "benchmarks": {
+    "mi300x": {
+      "expected_throughput_min": 8000,
+      "expected_latency_max_ms": 5.0
+    },
+    "mi250x": {
+      "expected_throughput_min": 4000,
+      "expected_latency_max_ms": 10.0
+    }
+  },
+  
+  "sources": {
+    "huggingface": "bert-base-uncased",
+    "onnx_zoo": "https://github.com/onnx/models/raw/main/text/machine_comprehension/bert-squad/model/bertsquad-12.onnx"
+  },
+  
+  "variants": [
+    {
+      "id": "bert-large",
+      "display_name": "BERT Large",
+      "layers": 24,
+      "hidden_size": 1024,
+      "num_attention_heads": 16,
+      "parameters": 340000000,
+      "huggingface": "bert-large-uncased"
+    }
+  ]
+}

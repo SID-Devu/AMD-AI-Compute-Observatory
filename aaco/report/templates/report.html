@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AACO Performance Report - {{ report_title }}</title>
+    <style>
+        :root {
+            --amd-red: #ED1C24;
+            --amd-dark: #1a1a1a;
+            --amd-gray: #333333;
+            --bg-light: #f5f5f5;
+            --border-color: #e0e0e0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--amd-gray);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--amd-dark);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .header .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header .logo span {
+            color: var(--amd-red);
+            font-weight: bold;
+            font-size: 28px;
+        }
+        
+        .nav {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 40px;
+        }
+        
+        .nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav li {
+            padding: 15px 0;
+        }
+        
+        .nav a {
+            text-decoration: none;
+            color: var(--amd-gray);
+            font-weight: 500;
+        }
+        
+        .nav a:hover, .nav a.active {
+            color: var(--amd-red);
+            border-bottom: 2px solid var(--amd-red);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--amd-dark);
+            border-bottom: 2px solid var(--amd-red);
+            padding-bottom: 8px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .metric-box {
+            background: var(--bg-light);
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--amd-red);
+        }
+        
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .metric-delta {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .metric-delta.positive { color: #22c55e; }
+        .metric-delta.negative { color: #ef4444; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background: var(--bg-light);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background: #fafafa;
+        }
+        
+        .status {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.pass { background: #dcfce7; color: #166534; }
+        .status.fail { background: #fee2e2; color: #991b1b; }
+        .status.warn { background: #fef3c7; color: #92400e; }
+        
+        .chart-container {
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        @media print {
+            .nav { display: none; }
+            .card { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <span>AACO</span>
+            <span style="color: white; font-weight: normal;">Performance Report</span>
+        </div>
+        <div>{{ timestamp }}</div>
+    </div>
+    
+    <nav class="nav">
+        <ul>
+            <li><a href="#summary" class="active">Summary</a></li>
+            <li><a href="#kernels">Kernels</a></li>
+            <li><a href="#roofline">Roofline</a></li>
+            <li><a href="#timeline">Timeline</a></li>
+            <li><a href="#analysis">Analysis</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <section id="summary">
+            <div class="card">
+                <h2>Performance Summary</h2>
+                <div class="summary-grid">
+                    {{ summary_metrics }}
+                </div>
+            </div>
+        </section>
+        
+        <section id="kernels">
+            <div class="card">
+                <h2>Kernel Performance</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kernel</th>
+                            <th>Latency (μs)</th>
+                            <th>FLOPS</th>
+                            <th>Memory BW</th>
+                            <th>Occupancy</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ kernel_table }}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section id="roofline">
+            <div class="card">
+                <h2>Roofline Analysis</h2>
+                <div class="chart-container" id="roofline-chart">
+                    {{ roofline_chart }}
+                </div>
+            </div>
+        </section>
+        
+        <section id="timeline">
+            <div class="card">
+                <h2>Execution Timeline</h2>
+                <div class="chart-container" id="timeline-chart">
+                    {{ timeline_chart }}
+                </div>
+            </div>
+        </section>
+        
+        <section id="analysis">
+            <div class="card">
+                <h2>Root Cause Analysis</h2>
+                {{ analysis_content }}
+            </div>
+        </section>
+    </div>
+    
+    <div class="footer">
+        Generated by AACO - AMD AI Compute Observatory | {{ timestamp }}
+    </div>
+    
+    <script>
+        // Chart rendering will be injected here
+        {{ chart_scripts }}
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "baseline_id": "mi300x-resnet50-v1",
+    "gpu_arch": "gfx942",
+    "gpu_name": "AMD Instinct MI300X",
+    "rocm_version": "6.2.0",
+    "created_at": "2026-01-15T10:30:00Z",
+    "model_name": "resnet50",
+    "batch_size": 64,
+    "precision": "fp16"
+  },
+  "kernels": {
+    "Conv2D_7x7_s2": {
+      "latency_us": 45.2,
+      "flops": 2.35e9,
+      "memory_bw_gbps": 850.0,
+      "occupancy": 0.82,
+      "grid_size": [128, 1, 1],
+      "block_size": [256, 1, 1]
+    },
+    "BatchNorm_64": {
+      "latency_us": 12.8,
+      "flops": 1.2e8,
+      "memory_bw_gbps": 2100.0,
+      "occupancy": 0.95,
+      "grid_size": [64, 1, 1],
+      "block_size": [256, 1, 1]
+    },
+    "GEMM_2048x2048x2048": {
+      "latency_us": 125.4,
+      "flops": 17.2e12,
+      "memory_bw_gbps": 2800.0,
+      "occupancy": 0.88,
+      "grid_size": [256, 256, 1],
+      "block_size": [128, 1, 1]
+    },
+    "Pooling_Global": {
+      "latency_us": 8.5,
+      "flops": 5.0e7,
+      "memory_bw_gbps": 1500.0,
+      "occupancy": 0.78,
+      "grid_size": [32, 1, 1],
+      "block_size": [256, 1, 1]
+    },
+    "Softmax": {
+      "latency_us": 5.2,
+      "flops": 2.0e7,
+      "memory_bw_gbps": 1200.0,
+      "occupancy": 0.72,
+      "grid_size": [16, 1, 1],
+      "block_size": [256, 1, 1]
+    }
+  },
+  "workload": {
+    "total_time_ms": 12.5,
+    "throughput_imgs_per_sec": 5120.0,
+    "memory_peak_mb": 8500,
+    "compute_pct": 72.5,
+    "memory_pct": 27.5
+  },
+  "thresholds": {
+    "latency_regression_pct": 5.0,
+    "throughput_regression_pct": 5.0,
+    "memory_regression_pct": 10.0
+  }
+}

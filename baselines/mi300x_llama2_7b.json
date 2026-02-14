@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "baseline_id": "mi300x-llama2-7b-v1",
+    "gpu_arch": "gfx942",
+    "gpu_name": "AMD Instinct MI300X",
+    "rocm_version": "6.2.0",
+    "created_at": "2026-01-20T14:00:00Z",
+    "model_name": "llama2-7b",
+    "batch_size": 1,
+    "sequence_length": 2048,
+    "precision": "fp16"
+  },
+  "kernels": {
+    "MFMA_GEMM_Q": {
+      "latency_us": 85.3,
+      "flops": 28.6e12,
+      "memory_bw_gbps": 3100.0,
+      "occupancy": 0.92,
+      "uses_mfma": true
+    },
+    "MFMA_GEMM_K": {
+      "latency_us": 85.1,
+      "flops": 28.6e12,
+      "memory_bw_gbps": 3100.0,
+      "occupancy": 0.92,
+      "uses_mfma": true
+    },
+    "MFMA_GEMM_V": {
+      "latency_us": 85.2,
+      "flops": 28.6e12,
+      "memory_bw_gbps": 3100.0,
+      "occupancy": 0.92,
+      "uses_mfma": true
+    },
+    "SoftmaxAttention": {
+      "latency_us": 42.5,
+      "flops": 8.4e9,
+      "memory_bw_gbps": 2400.0,
+      "occupancy": 0.85
+    },
+    "RMSNorm": {
+      "latency_us": 8.2,
+      "flops": 1.4e8,
+      "memory_bw_gbps": 2800.0,
+      "occupancy": 0.88
+    },
+    "SiLU": {
+      "latency_us": 4.5,
+      "flops": 7.0e7,
+      "memory_bw_gbps": 2200.0,
+      "occupancy": 0.82
+    },
+    "MLP_Up": {
+      "latency_us": 125.8,
+      "flops": 42.0e12,
+      "memory_bw_gbps": 3200.0,
+      "occupancy": 0.94
+    },
+    "MLP_Down": {
+      "latency_us": 125.5,
+      "flops": 42.0e12,
+      "memory_bw_gbps": 3200.0,
+      "occupancy": 0.94
+    }
+  },
+  "workload": {
+    "prefill_time_ms": 45.2,
+    "decode_time_per_token_ms": 8.5,
+    "throughput_tokens_per_sec": 117.6,
+    "memory_peak_mb": 14500,
+    "kv_cache_mb": 4096
+  },
+  "thresholds": {
+    "latency_regression_pct": 3.0,
+    "throughput_regression_pct": 3.0,
+    "memory_regression_pct": 5.0
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "model_id": "llama2-7b",
+  "display_name": "LLaMA 2 7B",
+  "category": "llm",
+  "framework": "pytorch",
+  
+  "architecture": {
+    "type": "transformer",
+    "layers": 32,
+    "hidden_size": 4096,
+    "num_attention_heads": 32,
+    "intermediate_size": 11008,
+    "vocab_size": 32000,
+    "parameters": 6738415616,
+    "max_sequence_length": 4096
+  },
+  
+  "default_config": {
+    "batch_size": 1,
+    "sequence_length": 2048,
+    "precision": "fp16",
+    "use_flash_attention": true,
+    "kv_cache_dtype": "fp16"
+  },
+  
+  "profiling": {
+    "warmup_iterations": 5,
+    "profile_iterations": 50,
+    "key_kernels": [
+      "MFMA_GEMM_Q",
+      "MFMA_GEMM_K", 
+      "MFMA_GEMM_V",
+      "MFMA_GEMM_O",
+      "SoftmaxAttention",
+      "RMSNorm",
+      "SiLU",
+      "MLP_Up",
+      "MLP_Gate",
+      "MLP_Down",
+      "Embedding",
+      "LMHead"
+    ],
+    "phases": ["prefill", "decode"]
+  },
+  
+  "benchmarks": {
+    "mi300x": {
+      "expected_prefill_tps_min": 3000,
+      "expected_decode_tps_min": 100,
+      "expected_memory_max_gb": 20
+    },
+    "mi250x": {
+      "expected_prefill_tps_min": 1500,
+      "expected_decode_tps_min": 50,
+      "expected_memory_max_gb": 18
+    }
+  },
+  
+  "sources": {
+    "huggingface": "meta-llama/Llama-2-7b-hf",
+    "local_path": "/models/llama2-7b-hf"
+  },
+  
+  "variants": [
+    {
+      "id": "llama2-7b-chat",
+      "display_name": "LLaMA 2 7B Chat",
+      "huggingface": "meta-llama/Llama-2-7b-chat-hf"
+    }
+  ]
+}
