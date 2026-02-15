@@ -98,10 +98,16 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov click rich numpy pandas pyarrow pyyaml jinja2 psutil matplotlib seaborn
           pip install -e .
       
-      - name: Run unit tests with coverage
+      - name: Verify package installation
+        run: |
+          python -c "import aaco; print('aaco imported successfully')"
+          python -c "from aaco.cli import cli; print('cli imported successfully')"
+      
+      - name: Run unit tests
         run: |
           pytest tests/unit/ -v --tb=short --junitxml=junit.xml
       

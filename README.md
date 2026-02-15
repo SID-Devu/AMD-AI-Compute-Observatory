@@ -12,9 +12,7 @@
 
 <br/>
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/SID-Devu/AMD-AI-Compute-Observatory/ci.yml?branch=master&style=flat-square&logo=github)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/actions)
-[![Code Quality](https://img.shields.io/badge/code%20quality-A+-brightgreen?style=flat-square)](.)
-[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen?style=flat-square)](.)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/SID-Devu/AMD-AI-Compute-Observatory/ci-cd.yml?branch=master&style=flat-square&logo=github)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/actions)
 [![PRs](https://img.shields.io/badge/PRs-welcome%20for%20review-blue?style=flat-square)](CONTRIBUTING.md)
 
 <br/>
