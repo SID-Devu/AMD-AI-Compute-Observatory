@@ -100,9 +100,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+          pip list
 
       - name: Run unit tests
-        run: python -m pytest tests/unit/ -v --tb=short --junitxml=junit.xml
+        run: |
+          echo "Python version: $(python --version)"
+          echo "Pytest version: $(python -m pytest --version)"
+          echo "Working directory: $(pwd)"
+          echo "Test files:"
+          ls -la tests/unit/
+          echo "Collecting tests..."
+          python -m pytest tests/unit/ --collect-only
+          echo "Running tests..."
+          python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml
       
       - name: Upload test results
         if: always()
