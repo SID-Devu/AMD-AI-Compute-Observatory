@@ -118,11 +118,20 @@ jobs:
         run: find tests/unit -name "*.py" | head -20
       
       - name: Check test imports
+        continue-on-error: true
         run: |
-          python -c "from tests.unit.test_core import *; print('test_core OK')"
-          python -c "from tests.unit.test_analytics import *; print('test_analytics OK')"
-          python -c "from tests.unit.test_cli import *; print('test_cli OK')"
-          python -c "from tests.unit.test_collectors import *; print('test_collectors OK')"
+          python -c "
+          import sys
+          import traceback
+          tests = ['test_core', 'test_analytics', 'test_cli', 'test_collectors']
+          for t in tests:
+              try:
+                  exec(f'from tests.unit.{t} import *')
+                  print(f'{t}: OK')
+              except Exception as e:
+                  print(f'{t}: FAILED - {e}')
+                  traceback.print_exc()
+          "
       
       - name: Run unit tests
         run: python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml --collect-only || true && python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml
