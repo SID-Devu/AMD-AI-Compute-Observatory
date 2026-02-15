@@ -114,8 +114,18 @@ jobs:
               exit(1)
           "
       
+      - name: List test files
+        run: find tests/unit -name "*.py" | head -20
+      
+      - name: Check test imports
+        run: |
+          python -c "from tests.unit.test_core import *; print('test_core OK')"
+          python -c "from tests.unit.test_analytics import *; print('test_analytics OK')"
+          python -c "from tests.unit.test_cli import *; print('test_cli OK')"
+          python -c "from tests.unit.test_collectors import *; print('test_collectors OK')"
+      
       - name: Run unit tests
-        run: python -m pytest tests/unit/ -v --tb=short --junitxml=junit.xml
+        run: python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml --collect-only || true && python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml
       
       - name: Show test summary
         if: always()
