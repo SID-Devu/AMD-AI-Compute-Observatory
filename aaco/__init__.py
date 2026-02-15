@@ -7,7 +7,7 @@ Performance analysis and observability platform for AI inference workloads
 on AMD Instinct accelerators.
 
 Author: Sudheer Ibrahim Daniel Devu
-Email: sudheeridevu@gmail.com
+Email: sudheerdevu4work@gmail.com
 GitHub: https://github.com/SID-Devu
 Repository: https://github.com/SID-Devu/AMD-AI-Compute-Observatory
 
@@ -16,7 +16,7 @@ Licensed under the MIT License. See LICENSE file for details.
 
 __version__ = "1.0.0"
 __author__ = "Sudheer Ibrahim Daniel Devu"
-__email__ = "sudheeridevu@gmail.com"
+__email__ = "sudheerdevu4work@gmail.com"
 __copyright__ = "Copyright (c) 2026 Sudheer Ibrahim Daniel Devu"
 
 from aaco.core.session import Session, SessionManager

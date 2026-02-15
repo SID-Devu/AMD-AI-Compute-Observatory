@@ -5,7 +5,7 @@
 **Sudheer Ibrahim Daniel Devu**
 
 - GitHub: [@SID-Devu](https://github.com/SID-Devu)
-- Email: sudheeridevu@gmail.com
+- Email: sudheerdevu4work@gmail.com
 
 AMD AI Compute Observatory was created and is maintained by Sudheer Ibrahim Daniel Devu.
 
