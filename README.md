@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/ROCm-6.0%2B-ED1C24?style=flat-square" alt="ROCm"/>
   <img src="https://img.shields.io/badge/Python-3.10%2B-ED1C24?style=flat-square" alt="Python"/>
   <img src="https://img.shields.io/badge/License-MIT-ED1C24?style=flat-square" alt="License"/>
-  <img src="https://img.shields.io/badge/Version-4.0.0-ED1C24?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-1.0.0-ED1C24?style=flat-square" alt="Version"/>
 </p>
 
 <p align="center">
