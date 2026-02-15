@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "AMD AI Compute Observatory"
+version: "1.0.0"
+date-released: 2026-02-15
+url: "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
+repository-code: "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
+license: MIT
+authors:
+  - family-names: "Devu"
+    given-names: "Sudheer Ibrahim Daniel"
+    email: "sudheerdevu4work@gmail.com"
+    orcid: ""
+keywords:
+  - performance-analysis
+  - gpu-profiling
+  - amd
+  - rocm
+  - inference
+  - observability
+  - machine-learning
+abstract: >
+  AMD AI Compute Observatory (AACO) is a performance analysis and observability
+  platform for AI inference workloads on AMD Instinct accelerators. The platform
+  provides deterministic measurement capabilities, cross-layer observability from
+  ONNX graphs to HIP kernels, and automated bottleneck classification with
+  statistical regression detection.

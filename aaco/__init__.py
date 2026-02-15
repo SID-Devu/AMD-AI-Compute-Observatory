@@ -1,28 +1,23 @@
 """
 AMD AI Compute Observatory (AACO)
-Full-stack observability and performance intelligence for AMD AI workloads.
 
-AACO-Ω∞: Model-to-Metal Performance Science & Governance Engine
+Copyright (c) 2026 Sudheer Ibrahim Daniel Devu. All rights reserved.
 
-A deterministic, self-calibrating, cross-layer AI performance laboratory that
-models, predicts, diagnoses, and experimentally validates model-to-hardware
-behavior on AMD GPUs.
+Performance analysis and observability platform for AI inference workloads
+on AMD Instinct accelerators.
 
-10-Pillar Architecture:
-1. Laboratory Mode - Deterministic execution control
-2. eBPF Forensic Scheduler - Scheduler interference analysis
-3. GPU Counter-Calibrated Intelligence - Advanced kernel fingerprinting
-4. Probabilistic Attribution Engine - Graph→Partition→Kernel mapping
-5. Hardware-Calibrated Digital Twin - HEU scoring with microbenchmarks
-6. Unified Trace Lake - Perfetto-compatible cross-layer traces
-7. Statistical Regression Governance - Robust baseline with drift detection
-8. Bayesian Root Cause Engine - Evidence-based posterior ranking
-9. Auto-Optimization Engine - Closed-loop hypothesis testing
-10. Fleet-Level Performance Ops - Multi-session aggregation and trends
+Author: Sudheer Ibrahim Daniel Devu
+Email: sudheeridevu@gmail.com
+GitHub: https://github.com/SID-Devu
+Repository: https://github.com/SID-Devu/AMD-AI-Compute-Observatory
+
+Licensed under the MIT License. See LICENSE file for details.
 """
 
-__version__ = "4.0.0"  # AACO-Ω∞
-__author__ = "Sudheer Devu"
+__version__ = "1.0.0"
+__author__ = "Sudheer Ibrahim Daniel Devu"
+__email__ = "sudheeridevu@gmail.com"
+__copyright__ = "Copyright (c) 2026 Sudheer Ibrahim Daniel Devu"
 
 from aaco.core.session import Session, SessionManager
 from aaco.core.schema import (

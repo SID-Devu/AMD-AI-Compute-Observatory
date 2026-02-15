@@ -1,5 +1,8 @@
 # Architecture
 
+> AMD AI Compute Observatory  
+> Copyright (c) 2026 Sudheer Ibrahim Daniel Devu
+
 ## System Overview
 
 AMD AI Compute Observatory (AACO) implements a layered architecture for comprehensive performance analysis of AI workloads on AMD Instinct accelerators.

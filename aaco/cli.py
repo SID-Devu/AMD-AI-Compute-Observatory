@@ -1,6 +1,10 @@
 """
 AACO Command Line Interface
-Main entry point for benchmarking, reporting, and analysis.
+
+Copyright (c) 2026 Sudheer Ibrahim Daniel Devu. All rights reserved.
+Licensed under the MIT License.
+
+Main entry point for profiling, reporting, and regression analysis.
 """
 
 import json

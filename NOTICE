@@ -1,0 +1,33 @@
+AMD AI Compute Observatory
+Copyright (c) 2026 Sudheer Ibrahim Daniel Devu
+
+This product includes software developed by Sudheer Ibrahim Daniel Devu.
+
+Project Repository: https://github.com/SID-Devu/AMD-AI-Compute-Observatory
+
+--------------------------------------------------------------------------------
+
+This software is provided under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+--------------------------------------------------------------------------------
+
+Third-Party Components:
+
+This software integrates with the following open-source projects:
+
+- ROCm (AMD) - https://github.com/ROCm/ROCm
+- ONNX Runtime (Microsoft) - https://github.com/microsoft/onnxruntime
+- MIGraphX (AMD) - https://github.com/ROCm/AMDMIGraphX
+- rocprofiler (AMD) - https://github.com/ROCm/rocprofiler
+
+All third-party components are used in accordance with their respective licenses.
