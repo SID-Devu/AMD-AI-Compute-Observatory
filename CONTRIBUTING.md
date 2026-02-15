@@ -1,116 +1,109 @@
-<div align="center">
+# Contributing to AMD AI Compute Observatory
 
-# 🤝 Contributing to AACO
+Thank you for your interest in contributing to AMD AI Compute Observatory (AACO). This document provides guidelines and instructions for contributors.
 
-**AMD AI Compute Observatory - Proprietary Repository**
+## Table of Contents
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20for%20review-blue.svg?style=flat-square)](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/pulls)
-[![Owner](https://img.shields.io/badge/owner-SID--Devu-orange?style=flat-square)](https://github.com/SID-Devu)
-
-</div>
-
----
-
-## 📢 Contribution Policy
-
-**Pull requests are welcome for review!**
-
-AMD AI Compute Observatory is a proprietary project owned by **Sudheer Ibrahim Daniel Devu**. While you may submit PRs, please understand:
-
-> ⚠️ **The owner has sole discretion to accept, reject, or modify any contribution.**
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Environment](#development-environment)
+- [Code Style](#code-style)
+- [Testing](#testing)
+- [Pull Request Process](#pull-request-process)
+- [Architecture Guidelines](#architecture-guidelines)
 
 ---
 
-## 📜 What You CAN Do
+## Code of Conduct
 
-| Permission | Description |
-|------------|-------------|
-| ✅ **View** | Browse and read the source code |
-| ✅ **Learn** | Study the code for personal education |
-| ✅ **Submit PRs** | Request changes for owner review |
-| ✅ **Report Issues** | Open issues for bugs or suggestions |
+Contributors are expected to maintain professional conduct in all interactions. Be respectful, constructive, and focused on technical merit.
 
 ---
 
-## 🚫 What You CANNOT Do
+## Getting Started
 
-| Restriction | Description |
-|-------------|-------------|
-| ❌ **Self-Merge** | Only owner can merge PRs |
-| ❌ **Fork & Distribute** | Redistribution is not permitted |
-| ❌ **Commercial Use** | Commercial use is strictly prohibited |
+### Prerequisites
 
----
+- Python 3.10 or higher
+- Git
+- ROCm 6.0+ (for integration testing)
 
-## 📝 PR Submission Guidelines
+### Initial Setup
 
-If you'd like to contribute:
+```bash
+# Clone the repository
+git clone https://github.com/SID-Devu/AMD-AI-Compute-Observatory.git
+cd AMD-AI-Compute-Observatory
 
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes
-4. **Submit** a pull request with clear description
-5. **Wait** for owner review
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
 
-### Important Terms
+# Install development dependencies
+pip install -e ".[dev,all]"
 
-By submitting a PR, you agree that:
-- Your contribution becomes the **exclusive property** of the owner if accepted
-- The owner may **modify** your submission before merging
-- **No guarantee** of acceptance is made
-- You **transfer all rights** to submitted code
-
----
-
-## 📧 Contact
-
-For licensing inquiries or collaboration opportunities, contact the repository owner directly.
-
----
-
-<div align="center">
-
-**© 2026 Sudheer Ibrahim Daniel Devu. All Rights Reserved.**
-
-</div>
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
-
-# 3. Install in development mode with all dependencies
-pip install -e ".[dev,full]"
-
-# 4. Verify setup
+# Verify installation
 pytest tests/unit/ -v --tb=short
 ```
 
 ---
 
-## ✨ Code Style
+## Development Environment
 
-We maintain high code quality standards using modern Python tooling.
+### Required Tools
 
-### Linting & Formatting (Ruff)
+| Tool | Purpose | Installation |
+|------|---------|--------------|
+| Ruff | Linting and formatting | `pip install ruff` |
+| MyPy | Static type checking | `pip install mypy` |
+| pytest | Testing framework | `pip install pytest` |
+| pre-commit | Git hooks | `pip install pre-commit` |
+
+### Pre-commit Hooks
 
 ```bash
-# Check linting
+# Install pre-commit hooks
+pre-commit install
+
+# Run manually on all files
+pre-commit run --all-files
+```
+
+---
+
+## Code Style
+
+AACO follows strict code quality standards. All submissions must pass automated checks.
+
+### Linting and Formatting
+
+```bash
+# Check for issues
 ruff check aaco/
+
+# Auto-fix issues
+ruff check --fix aaco/
 
 # Format code
 ruff format aaco/
-
-# Fix auto-fixable issues
-ruff check --fix aaco/
 ```
 
-### Type Checking (MyPy)
+### Type Annotations
 
-All code **must** include type hints:
+All code must include type hints:
 
 ```bash
 mypy aaco/ --ignore-missing-imports
 ```
 
-### Example Code Style
+### Documentation
+
+- Use Google-style docstrings
+- Document all public functions, classes, and methods
+- Include type information in docstrings
+
+**Example:**
 
 ```python
 from dataclasses import dataclass
@@ -124,6 +117,7 @@ class BottleneckResult:
         category: The detected bottleneck category.
         confidence: Confidence score between 0 and 1.
         evidence: List of evidence signals supporting classification.
+        recommendation: Optional optimization recommendation.
     """
     category: str
     confidence: float
@@ -133,25 +127,25 @@ class BottleneckResult:
 
 ---
 
-## 🧪 Testing
+## Testing
 
-### Test Categories
+### Test Structure
 
-| Type | Location | Command | Requirements |
-|------|----------|---------|--------------|
-| **Unit** | `tests/unit/` | `pytest tests/unit -v` | None |
-| **Integration** | `tests/integration/` | `pytest tests/integration -v` | ROCm |
+| Type | Location | Purpose |
+|------|----------|---------|
+| Unit | `tests/unit/` | Component-level testing |
+| Integration | `tests/integration/` | End-to-end testing (requires ROCm) |
 
 ### Running Tests
 
 ```bash
-# Fast unit tests
+# Unit tests
 pytest tests/unit -v
 
-# Integration tests (requires ROCm)
-AACO_RUN_INTEGRATION=1 pytest tests/integration -v
+# Integration tests
+pytest tests/integration -v
 
-# Full suite with coverage
+# With coverage
 pytest --cov=aaco --cov-report=html --cov-report=term
 ```
 
@@ -182,11 +176,17 @@ class TestBottleneckClassifier:
             classifier.classify({})
 ```
 
+### Test Requirements
+
+- All new features must include tests
+- Maintain minimum 80% code coverage
+- Tests must pass on all supported platforms
+
 ---
 
-## 🔀 Pull Request Process
+## Pull Request Process
 
-### 1️⃣ Fork & Branch
+### 1. Create a Branch
 
 ```bash
 # Fork on GitHub, then clone your fork
@@ -194,79 +194,95 @@ git clone https://github.com/YOUR_USERNAME/AMD-AI-Compute-Observatory.git
 cd AMD-AI-Compute-Observatory
 
 # Create feature branch
-git checkout -b feature/my-awesome-feature
+git checkout -b feature/descriptive-name
 ```
 
-### 2️⃣ Make Changes
+### 2. Implement Changes
 
 - Follow code style guidelines
-- Add tests for new functionality
-- Update documentation if needed
+- Add or update tests as needed
+- Update documentation if applicable
 
-### 3️⃣ Commit with Conventional Commits
+### 3. Commit Changes
 
-```bash
-git commit -m "feat: Add thermal throttle detection to classifier"
-```
+Use conventional commit messages:
 
 | Prefix | Description |
 |--------|-------------|
 | `feat:` | New feature |
 | `fix:` | Bug fix |
-| `docs:` | Documentation |
-| `test:` | Test changes |
+| `docs:` | Documentation changes |
+| `test:` | Test additions or modifications |
 | `refactor:` | Code refactoring |
-| `perf:` | Performance |
-| `chore:` | Maintenance |
+| `perf:` | Performance improvements |
+| `chore:` | Maintenance tasks |
 
-### 4️⃣ Push & Create PR
+**Example:**
 
 ```bash
-git push origin feature/my-awesome-feature
+git commit -m "feat: add thermal throttle detection to classifier"
 ```
 
-Then create a Pull Request on GitHub.
+### 4. Submit Pull Request
+
+```bash
+git push origin feature/descriptive-name
+```
+
+Create a pull request on GitHub with:
+
+- Clear title describing the change
+- Description of what was changed and why
+- Reference to any related issues
+- Test results and coverage information
+
+### 5. Review Process
+
+- All PRs require review before merging
+- Address review feedback promptly
+- CI checks must pass
 
 ---
 
-## 🏗️ Architecture Guidelines
+## Architecture Guidelines
 
 ### Adding a New Collector
 
-```
-1. Create file: aaco/collectors/my_collector.py
-2. Implement interface: start(), stop(), get_samples()
-3. Export in: aaco/collectors/__init__.py
-4. Document in: docs/data_schema.md
-```
+1. Create file: `aaco/collectors/my_collector.py`
+2. Implement interface: `start()`, `stop()`, `get_samples()`
+3. Export in: `aaco/collectors/__init__.py`
+4. Add tests: `tests/unit/collectors/test_my_collector.py`
+5. Document in: `docs/data_schema.md`
 
 ### Adding a New Bottleneck Category
 
-```
-1. Add to enum: BottleneckCategory in classify.py
-2. Implement rules: BottleneckClassifier
-3. Add recommendation: in recommendations mapping
-4. Document: docs/bottleneck_taxonomy.md
-```
+1. Add to enum: `BottleneckCategory` in `classify.py`
+2. Implement detection rules in `BottleneckClassifier`
+3. Add recommendation mapping
+4. Update documentation: `docs/bottleneck_taxonomy.md`
+5. Add tests for the new category
 
-### Adding a New CLI Command
+### Adding a CLI Command
 
 ```python
 @cli.command()
-@click.option('--model', required=True, help='Model name')
-def my_command(model: str):
-    """Brief description of command."""
+@click.option('--model', required=True, help='Model name or path')
+def my_command(model: str) -> None:
+    """Brief description of what the command does."""
     # Implementation
 ```
 
 ---
 
-<div align="center">
+## Questions
 
-## ❓ Questions?
+For questions or clarification:
 
-Open an [issue](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/issues) or start a [discussion](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/discussions).
+- Open an [issue](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/issues)
+- Start a [discussion](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/discussions)
 
-**Thank you for contributing to AACO-SIGMA! 🎉**
+---
 
-</div>
+## License
+
+By contributing to AMD AI Compute Observatory, you agree that your contributions will be licensed under the MIT License.

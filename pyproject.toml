@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aaco"
-version = "1.0.0"
-description = "AMD AI Compute Observatory - Full-stack observability and performance intelligence for AMD AI workloads"
+version = "4.0.0"
+description = "AMD AI Compute Observatory - Model-to-Metal Performance Analysis Platform for AMD Instinct Accelerators"
 readme = "README.md"
-license = {text = "Proprietary Source-Available"}
+license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
     {name = "Sudheer Ibrahim Daniel Devu", email = "sudheeridevu@gmail.com"}
@@ -25,7 +25,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
