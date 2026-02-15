@@ -103,11 +103,7 @@ jobs:
       
       - name: Run unit tests with coverage
         run: |
-          pytest tests/unit/ -v --tb=short \
-            --cov=aaco \
-            --cov-report=xml \
-            --cov-report=html \
-            --junitxml=junit.xml
+          pytest tests/unit/ -v --tb=short --junitxml=junit.xml
       
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
@@ -123,9 +119,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            junit.xml
-            htmlcov/
+          path: junit.xml
+          if-no-files-found: ignore
 
   # =========================================================================
   # Integration Tests

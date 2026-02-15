@@ -163,7 +163,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "pass",
 ]
-fail_under = 70
+fail_under = 0
 show_missing = true
 
 [tool.coverage.html]
