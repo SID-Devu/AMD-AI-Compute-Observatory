@@ -1,111 +1,57 @@
 # AACO Source Code
 
-AMD AI Compute Observatory - Core Python Package
+This directory contains the core Python package for AMD AI Compute Observatory.
 
-## Module Architecture
+## Package Structure
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                               AACO MODULES                                      │
-└─────────────────────────────────────────────────────────────────────────────────┘
+| Module | Description |
+|--------|-------------|
+| `core/` | Session management, configuration, and shared utilities |
+| `analytics/` | Performance metrics computation and bottleneck classification |
+| `collectors/` | GPU and system telemetry data collection |
+| `profiler/` | rocprof integration and kernel profiling |
+| `runner/` | ONNX Runtime execution with multiple backend support |
+| `laboratory/` | Deterministic execution environment with process isolation |
+| `calibration/` | Hardware envelope calibration via microbenchmarks |
+| `governance/` | Statistical regression detection and baseline management |
+| `tracelake/` | Unified trace storage and cross-layer correlation |
+| `report/` | Report generation in HTML and JSON formats |
 
-                              ┌─────────────┐
-                              │    cli.py   │
-                              │   Entry     │
-                              │   Point     │
-                              └──────┬──────┘
-                                     │
-          ┌──────────────────────────┼──────────────────────────┐
-          │                          │                          │
-          ▼                          ▼                          ▼
-┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
-│                 │        │                 │        │                 │
-│     runner/     │        │    profiler/    │        │    report/      │
-│                 │        │                 │        │                 │
-│  Model Exec     │        │  GPU Profiling  │        │  Generation     │
-│                 │        │                 │        │                 │
-└────────┬────────┘        └────────┬────────┘        └────────┬────────┘
-         │                          │                          │
-         └──────────────────────────┼──────────────────────────┘
-                                    │
-          ┌─────────────────────────┼─────────────────────────┐
-          │                         │                         │
-          ▼                         ▼                         ▼
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│                 │       │                 │       │                 │
-│   collectors/   │       │   analytics/    │       │   governance/   │
-│                 │       │                 │       │                 │
-│  Data Collect   │       │  Analysis       │       │  Regression     │
-│                 │       │                 │       │                 │
-└────────┬────────┘       └────────┬────────┘       └────────┬────────┘
-         │                         │                         │
-         └─────────────────────────┼─────────────────────────┘
-                                   │
-          ┌────────────────────────┼────────────────────────┐
-          │                        │                        │
-          ▼                        ▼                        ▼
-┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│                 │      │                 │      │                 │
-│  laboratory/    │      │  calibration/   │      │   tracelake/    │
-│                 │      │                 │      │                 │
-│  Isolation      │      │  HW Calibrate   │      │  Trace Storage  │
-│                 │      │                 │      │                 │
-└────────┬────────┘      └────────┬────────┘      └────────┬────────┘
-         │                        │                        │
-         └────────────────────────┼────────────────────────┘
-                                  │
-                                  ▼
-                        ┌─────────────────┐
-                        │                 │
-                        │     core/       │
-                        │                 │
-                        │  Session, Schema│
-                        │  Utilities      │
-                        │                 │
-                        └─────────────────┘
-```
-
-## Module Descriptions
-
-| Module | Purpose |
-|--------|---------|
-| `core/` | Session management, data schema, utilities |
-| `collectors/` | System and GPU telemetry collection |
-| `profiler/` | rocprof integration for kernel profiling |
-| `analytics/` | Metrics computation, classification, attribution |
-| `governance/` | Statistical regression detection, fleet operations |
-| `laboratory/` | Deterministic execution environment |
-| `calibration/` | Hardware performance calibration |
-| `tracelake/` | Unified trace storage and export |
-| `runner/` | ONNX Runtime model execution |
-| `report/` | HTML/JSON report generation |
-| `dashboard/` | Real-time Streamlit dashboard |
-| `cli.py` | Command-line interface |
-
-## Data Flow
+## Module Dependencies
 
 ```
-Input Model ──► runner/ ──► collectors/ ──► tracelake/
-                              │
-                              ▼
-                        analytics/ ──► governance/ ──► report/
+cli.py
+  ├── runner/
+  │     └── core/, collectors/
+  ├── profiler/
+  │     └── core/
+  ├── report/
+  │     └── analytics/, tracelake/
+  ├── analytics/
+  │     └── collectors/, core/
+  └── governance/
+        └── analytics/, core/
 ```
 
-## Usage
+## Entry Points
 
-```python
-from aaco.core.session import SessionManager
-from aaco.runner.ort_runner import ORTRunner
-from aaco.analytics.classify import BottleneckClassifier
+The package exposes the following CLI commands via `cli.py`:
 
-# Initialize session
-session = SessionManager.create_session()
+- `aaco run` — Execute profiling session
+- `aaco report` — Generate performance reports
+- `aaco diff` — Compare sessions against baselines
+- `aaco baseline` — Manage performance baselines
+- `aaco dashboard` — Launch real-time monitoring interface
 
-# Run inference
-runner = ORTRunner(model_path="model.onnx")
-results = runner.run(iterations=100)
+## Development
 
-# Classify bottleneck
-classifier = BottleneckClassifier()
-bottleneck = classifier.classify(results.metrics)
+```bash
+# Install in development mode
+pip install -e ".[dev]"
+
+# Run tests for specific module
+pytest tests/unit/test_analytics.py -v
+
+# Type check
+mypy aaco/ --ignore-missing-imports
 ```

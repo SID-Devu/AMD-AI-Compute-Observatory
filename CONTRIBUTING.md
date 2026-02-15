@@ -1,88 +1,84 @@
 # Contributing to AMD AI Compute Observatory
 
-Thank you for your interest in contributing to AMD AI Compute Observatory (AACO). This document provides guidelines and instructions for contributors.
+Thank you for your interest in contributing to AMD AI Compute Observatory. This document outlines
+the contribution process and requirements for the project.
 
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
-- [Development Environment](#development-environment)
-- [Code Style](#code-style)
-- [Testing](#testing)
-- [Pull Request Process](#pull-request-process)
-- [Architecture Guidelines](#architecture-guidelines)
-
----
+- [Development Setup](#development-setup)
+- [Coding Standards](#coding-standards)
+- [Testing Requirements](#testing-requirements)
+- [Submitting Changes](#submitting-changes)
+- [Review Process](#review-process)
 
 ## Code of Conduct
 
-Contributors are expected to maintain professional conduct in all interactions. Be respectful, constructive, and focused on technical merit.
-
----
+All contributors are expected to adhere to professional standards of conduct. Please review our
+[Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- Git
-- ROCm 6.0+ (for integration testing)
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Python | 3.10+ | Required |
+| Git | 2.30+ | Required |
+| ROCm | 6.0+ | Required for integration tests |
 
-### Initial Setup
+### Fork and Clone
+
+1. Fork the repository on GitHub
+2. Clone your fork locally:
 
 ```bash
-# Clone the repository
-git clone https://github.com/SID-Devu/AMD-AI-Compute-Observatory.git
+git clone https://github.com/<your-username>/AMD-AI-Compute-Observatory.git
 cd AMD-AI-Compute-Observatory
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate   # Windows
-
-# Install development dependencies
-pip install -e ".[dev,all]"
-
-# Verify installation
-pytest tests/unit/ -v --tb=short
 ```
 
----
+3. Add the upstream remote:
 
-## Development Environment
+```bash
+git remote add upstream https://github.com/SID-Devu/AMD-AI-Compute-Observatory.git
+```
 
-### Required Tools
+## Development Setup
 
-| Tool | Purpose | Installation |
-|------|---------|--------------|
-| Ruff | Linting and formatting | `pip install ruff` |
-| MyPy | Static type checking | `pip install mypy` |
-| pytest | Testing framework | `pip install pytest` |
-| pre-commit | Git hooks | `pip install pre-commit` |
+### Virtual Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate     # Windows
+```
+
+### Install Dependencies
+
+```bash
+pip install -e ".[dev,all]"
+```
 
 ### Pre-commit Hooks
 
 ```bash
-# Install pre-commit hooks
+pip install pre-commit
 pre-commit install
-
-# Run manually on all files
-pre-commit run --all-files
 ```
 
----
+## Coding Standards
 
-## Code Style
+### Style Guidelines
 
-AACO follows strict code quality standards. All submissions must pass automated checks.
-
-### Linting and Formatting
+This project uses [Ruff](https://github.com/astral-sh/ruff) for linting and formatting. All
+submissions must pass automated style checks.
 
 ```bash
-# Check for issues
+# Check for style issues
 ruff check aaco/
 
-# Auto-fix issues
+# Auto-fix issues where possible
 ruff check --fix aaco/
 
 # Format code
@@ -91,198 +87,146 @@ ruff format aaco/
 
 ### Type Annotations
 
-All code must include type hints:
+All code must include type hints. Type checking is performed with MyPy:
 
 ```bash
 mypy aaco/ --ignore-missing-imports
 ```
 
-### Documentation
+### Documentation Standards
 
-- Use Google-style docstrings
-- Document all public functions, classes, and methods
-- Include type information in docstrings
+- All public functions, classes, and modules must have docstrings
+- Use Google-style docstring format
+- Include type information in docstrings for complex types
+- Update relevant documentation when adding or modifying features
 
-**Example:**
+Example:
 
 ```python
-from dataclasses import dataclass
-from typing import Optional, List
+def compute_heu(measured: float, calibrated: float) -> float:
+    """Compute Hardware Envelope Utilization.
 
-@dataclass
-class BottleneckResult:
-    """Result of bottleneck classification analysis.
-    
-    Attributes:
-        category: The detected bottleneck category.
-        confidence: Confidence score between 0 and 1.
-        evidence: List of evidence signals supporting classification.
-        recommendation: Optional optimization recommendation.
+    Args:
+        measured: Measured throughput in operations per second.
+        calibrated: Calibrated peak throughput from hardware envelope.
+
+    Returns:
+        HEU as a decimal between 0.0 and 1.0.
+
+    Raises:
+        ValueError: If calibrated value is zero or negative.
     """
-    category: str
-    confidence: float
-    evidence: List[dict]
-    recommendation: Optional[str] = None
+    if calibrated <= 0:
+        raise ValueError("Calibrated value must be positive")
+    return measured / calibrated
 ```
 
----
-
-## Testing
-
-### Test Structure
-
-| Type | Location | Purpose |
-|------|----------|---------|
-| Unit | `tests/unit/` | Component-level testing |
-| Integration | `tests/integration/` | End-to-end testing (requires ROCm) |
+## Testing Requirements
 
 ### Running Tests
 
 ```bash
 # Unit tests
-pytest tests/unit -v
+pytest tests/unit/ -v
 
-# Integration tests
-pytest tests/integration -v
+# Integration tests (requires ROCm)
+pytest tests/integration/ -v
 
-# With coverage
-pytest --cov=aaco --cov-report=html --cov-report=term
+# Full suite with coverage
+pytest --cov=aaco --cov-report=html
 ```
 
-### Writing Tests
+### Test Coverage
 
-```python
-import pytest
-from aaco.analytics.classify import BottleneckClassifier
+- New features must include corresponding unit tests
+- Bug fixes should include regression tests
+- Maintain minimum 80% code coverage for new code
 
-class TestBottleneckClassifier:
-    """Tests for BottleneckClassifier."""
-    
-    def test_launch_bound_detection(self):
-        """Should detect launch-bound workloads correctly."""
-        classifier = BottleneckClassifier()
-        metrics = {"microkernel_pct": 0.8, "launch_rate": 15000}
-        
-        result = classifier.classify(metrics)
-        
-        assert result.category == "launch-bound"
-        assert result.confidence > 0.7
-    
-    def test_invalid_input_raises(self):
-        """Should raise ValueError for invalid input."""
-        classifier = BottleneckClassifier()
-        
-        with pytest.raises(ValueError, match="metrics cannot be empty"):
-            classifier.classify({})
+### Test Organization
+
+| Directory | Purpose |
+|-----------|---------|
+| `tests/unit/` | Unit tests for individual components |
+| `tests/integration/` | Integration tests requiring full environment |
+| `tests/benchmarks/` | Performance benchmarks |
+
+## Submitting Changes
+
+### Branch Naming
+
+Use descriptive branch names following the pattern:
+
+- `feature/<description>` — New features
+- `fix/<description>` — Bug fixes
+- `docs/<description>` — Documentation updates
+- `refactor/<description>` — Code refactoring
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
 ```
 
-### Test Requirements
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
-- All new features must include tests
-- Maintain minimum 80% code coverage
-- Tests must pass on all supported platforms
+Examples:
 
----
+```
+feat(analytics): add Bayesian attribution engine
 
-## Pull Request Process
+fix(profiler): correct kernel duration calculation for async launches
 
-### 1. Create a Branch
-
-```bash
-# Fork on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/AMD-AI-Compute-Observatory.git
-cd AMD-AI-Compute-Observatory
-
-# Create feature branch
-git checkout -b feature/descriptive-name
+docs(readme): update installation instructions for ROCm 6.2
 ```
 
-### 2. Implement Changes
+### Pull Request Process
 
-- Follow code style guidelines
-- Add or update tests as needed
-- Update documentation if applicable
+1. Ensure all tests pass locally
+2. Update documentation as needed
+3. Create pull request against the `master` branch
+4. Fill out the pull request template completely
+5. Request review from maintainers
 
-### 3. Commit Changes
+### Pull Request Checklist
 
-Use conventional commit messages:
+- [ ] Code follows project style guidelines
+- [ ] All tests pass
+- [ ] New code includes appropriate tests
+- [ ] Documentation updated
+- [ ] Commit messages follow conventions
+- [ ] No merge conflicts
 
-| Prefix | Description |
-|--------|-------------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `docs:` | Documentation changes |
-| `test:` | Test additions or modifications |
-| `refactor:` | Code refactoring |
-| `perf:` | Performance improvements |
-| `chore:` | Maintenance tasks |
+## Review Process
 
-**Example:**
+### Timeline
 
-```bash
-git commit -m "feat: add thermal throttle detection to classifier"
-```
+- Initial review within 5 business days
+- Follow-up reviews within 3 business days
 
-### 4. Submit Pull Request
+### Review Criteria
 
-```bash
-git push origin feature/descriptive-name
-```
+- Code quality and style compliance
+- Test coverage and quality
+- Documentation completeness
+- Performance implications
+- Security considerations
 
-Create a pull request on GitHub with:
+### Merging
 
-- Clear title describing the change
-- Description of what was changed and why
-- Reference to any related issues
-- Test results and coverage information
+Pull requests require:
 
-### 5. Review Process
-
-- All PRs require review before merging
-- Address review feedback promptly
-- CI checks must pass
-
----
-
-## Architecture Guidelines
-
-### Adding a New Collector
-
-1. Create file: `aaco/collectors/my_collector.py`
-2. Implement interface: `start()`, `stop()`, `get_samples()`
-3. Export in: `aaco/collectors/__init__.py`
-4. Add tests: `tests/unit/collectors/test_my_collector.py`
-5. Document in: `docs/data_schema.md`
-
-### Adding a New Bottleneck Category
-
-1. Add to enum: `BottleneckCategory` in `classify.py`
-2. Implement detection rules in `BottleneckClassifier`
-3. Add recommendation mapping
-4. Update documentation: `docs/bottleneck_taxonomy.md`
-5. Add tests for the new category
-
-### Adding a CLI Command
-
-```python
-@cli.command()
-@click.option('--model', required=True, help='Model name or path')
-def my_command(model: str) -> None:
-    """Brief description of what the command does."""
-    # Implementation
-```
-
----
+- At least one approving review
+- All CI checks passing
+- No unresolved comments
+- Up-to-date with target branch
 
 ## Questions
 
-For questions or clarification:
-
-- Open an [issue](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/issues)
-- Start a [discussion](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/discussions)
-
----
-
-## License
-
-By contributing to AMD AI Compute Observatory, you agree that your contributions will be licensed under the MIT License.
+For questions about contributing, please open a
+[Discussion](https://github.com/SID-Devu/AMD-AI-Compute-Observatory/discussions) on GitHub.

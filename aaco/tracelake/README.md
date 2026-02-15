@@ -1,131 +1,37 @@
-# Trace Lake Module
+# Tracelake Module
 
 Unified trace storage and cross-layer correlation.
 
-## Architecture
+## Storage Format
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            TRACE LAKE MODULE                                    │
-│                                                                                 │
-│                      Unified Performance Data Storage                           │
-└─────────────────────────────────────────────────────────────────────────────────┘
+All trace data is stored in Apache Parquet format for efficient columnar access.
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           DATA INGESTION                                        │
-│                                                                                 │
-│    ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│    │             │  │             │  │             │  │             │         │
-│    │   rocprof   │  │   rocm-smi  │  │   /proc     │  │    eBPF     │         │
-│    │   traces    │  │   samples   │  │   samples   │  │   events    │         │
-│    │             │  │             │  │             │  │             │         │
-│    └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘         │
-│           │                │                │                │                 │
-│           └────────────────┴────────────────┴────────────────┘                 │
-│                                    │                                            │
-│                                    ▼                                            │
-│    ┌─────────────────────────────────────────────────────────────────────┐     │
-│    │                      Event Normalizer                                │     │
-│    │                                                                      │     │
-│    │  • Timestamp alignment (nanosecond precision)                       │     │
-│    │  • Schema normalization                                             │     │
-│    │  • Event type classification                                        │     │
-│    │                                                                      │     │
-│    └─────────────────────────────────────────────────────────────────────┘     │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+## Schema Overview
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          STORAGE LAYER                                          │
-│                                                                                 │
-│    ┌─────────────────────────────────────────────────────────────────────┐     │
-│    │                       Parquet Store                                  │     │
-│    │                                                                      │     │
-│    │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │     │
-│    │   │              │  │              │  │              │             │     │
-│    │   │   Kernel     │  │     GPU      │  │    System    │             │     │
-│    │   │   Events     │  │   Events     │  │   Events     │             │     │
-│    │   │              │  │              │  │              │             │     │
-│    │   │ .parquet     │  │ .parquet     │  │ .parquet     │             │     │
-│    │   │              │  │              │  │              │             │     │
-│    │   └──────────────┘  └──────────────┘  └──────────────┘             │     │
-│    │                                                                      │     │
-│    └─────────────────────────────────────────────────────────────────────┘     │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+| Table | Contents |
+|-------|----------|
+| `graph_nodes.parquet` | ONNX graph node metadata |
+| `graph_edges.parquet` | ONNX graph edge connectivity |
+| `kernels.parquet` | HIP kernel execution records |
+| `gpu_telemetry.parquet` | GPU time-series metrics |
+| `system_telemetry.parquet` | System time-series metrics |
+| `attribution.parquet` | Graph-to-kernel mapping |
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          QUERY INTERFACE                                        │
-│                                                                                 │
-│    ┌─────────────────────────────────────────────────────────────────────┐     │
-│    │                        Trace Query API                               │     │
-│    │                                                                      │     │
-│    │   • Time range queries                                              │     │
-│    │   • Event type filtering                                            │     │
-│    │   • Cross-reference joins                                           │     │
-│    │   • Aggregations (mean, sum, count)                                │     │
-│    │                                                                      │     │
-│    └─────────────────────────────────────────────────────────────────────┘     │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+## Correlation
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          EXPORT FORMATS                                         │
-│                                                                                 │
-│    ┌───────────────┐  ┌───────────────┐  ┌───────────────┐                    │
-│    │               │  │               │  │               │                    │
-│    │   Perfetto    │  │   Chrome      │  │     JSON      │                    │
-│    │   Protobuf    │  │   Trace       │  │   Events      │                    │
-│    │               │  │               │  │               │                    │
-│    │   ui.perfetto │  │  chrome://    │  │  Programmatic │                    │
-│    │   .dev        │  │  tracing      │  │   Access      │                    │
-│    │               │  │               │  │               │                    │
-│    └───────────────┘  └───────────────┘  └───────────────┘                    │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
+Tracelake provides cross-layer correlation via timestamp alignment and operation
+attribution, enabling queries that span from ONNX operations to kernel executions.
 
 ## Usage
 
 ```python
 from aaco.tracelake import TraceLake
 
-# Initialize trace lake
-lake = TraceLake(session_path="sessions/20260215_abc123")
+lake = TraceLake.load("sessions/latest")
 
-# Query kernel events
-kernels = lake.query(
-    event_type="kernel",
-    start_ns=0,
-    end_ns=1_000_000_000
-)
+# Query kernel data
+kernels = lake.query("SELECT * FROM kernels WHERE duration_ns > 1000000")
 
-# Cross-reference with GPU telemetry
-timeline = lake.correlate(
-    kernel_events=kernels,
-    gpu_samples=lake.query(event_type="gpu")
-)
-
-# Export to Perfetto
-lake.export_perfetto("trace.perfetto")
+# Get graph-to-kernel mapping
+attribution = lake.get_attribution()
 ```
-
-## Schema
-
-### Unified Event Schema
-
-| Column | Type | Description |
-|--------|------|-------------|
-| timestamp_ns | int64 | Event timestamp (ns) |
-| event_type | string | kernel/gpu/system/ebpf |
-| duration_ns | int64 | Event duration |
-| name | string | Event name |
-| metadata | json | Additional properties |
-
-### Perfetto Export
-
-Compatible with [Perfetto UI](https://ui.perfetto.dev) for visualization:
-- Kernel execution tracks
-- GPU telemetry tracks
-- System metrics tracks
-- Cross-layer correlation
