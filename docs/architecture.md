@@ -1,232 +1,335 @@
-# AACO Architecture
+# Architecture
 
 ## System Overview
 
-AMD AI Compute Observatory (AACO) is a full-stack performance observability platform for AMD AI workloads. It provides deep visibility into every layer of the AI inference pipeline, from kernel launches to end-to-end latency.
+AMD AI Compute Observatory (AACO) implements a layered architecture for comprehensive performance analysis of AI workloads on AMD Instinct accelerators.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          User Interface                                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
-│  │  CLI Tool   │  │ HTML Report │  │   JSON API  │  │  Dashboard  │     │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Report & Analytics Layer                          │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌────────────────┐  │
-│  │   Report Renderer   │  │ Regression Detector │  │   Bottleneck   │  │
-│  │   (HTML/Terminal)   │  │   (A/B Comparison)  │  │   Classifier   │  │
-│  └─────────────────────┘  └─────────────────────┘  └────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         Metrics Engine                                    │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  Derived Metrics: Throughput, Efficiency, GPU Active Ratio, KAR │   │
-│  │  Phase Analysis: Warmup vs Measurement separation               │   │
-│  │  Statistical: Mean, Std, P50/P90/P99, CoV, IQR                  │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       Data Collection Layer                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐ │
-│  │  ORT Runner  │  │   rocprof    │  │  System      │  │  GPU        │ │
-│  │  (Inference) │  │   Wrapper    │  │  Sampler     │  │  Sampler    │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └─────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          Core Infrastructure                             │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────┐  │
-│  │  Session Manager │  │   Data Schema    │  │      Utilities       │  │
-│  │  (Lifecycle)     │  │   (Dataclasses)  │  │  (Timing, Proc, IO)  │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        External Dependencies                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐ │
-│  │ ONNX Runtime │  │    rocprof   │  │   rocm-smi   │  │  /proc FS   │ │
-│  │ (MIGraphX EP)│  │  (profiler)  │  │  (telemetry) │  │  (Linux)    │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └─────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│                        AMD AI COMPUTE OBSERVATORY                               │
+│                                                                                 │
+│                   Model-to-Metal Performance Analysis Platform                  │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ INTERFACE LAYER                                                                 │
+│                                                                                 │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐   │
+│  │               │  │               │  │               │  │               │   │
+│  │   CLI Tool    │  │  HTML Report  │  │   JSON API    │  │   Dashboard   │   │
+│  │               │  │               │  │               │  │               │   │
+│  │   aaco run    │  │  Interactive  │  │  Programmatic │  │   Streamlit   │   │
+│  │   aaco diff   │  │  Visualization│  │    Access     │  │   Real-time   │   │
+│  │               │  │               │  │               │  │               │   │
+│  └───────────────┘  └───────────────┘  └───────────────┘  └───────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ GOVERNANCE LAYER                                                                │
+│                                                                                 │
+│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐     │
+│  │                     │  │                     │  │                     │     │
+│  │     Statistical     │  │     Root Cause      │  │       Fleet         │     │
+│  │     Regression      │  │      Analysis       │  │     Operations      │     │
+│  │     Governance      │  │       Engine        │  │                     │     │
+│  │                     │  │                     │  │                     │     │
+│  │  • EWMA Detection   │  │  • Bayesian RCPP    │  │  • Multi-session    │     │
+│  │  • CUSUM Analysis   │  │  • Evidence Ranking │  │  • Trend Analysis   │     │
+│  │  • Robust Baseline  │  │  • Causal Inference │  │  • Fleet Heatmaps   │     │
+│  │                     │  │                     │  │                     │     │
+│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘     │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ INTELLIGENCE LAYER                                                              │
+│                                                                                 │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐   │
+│  │               │  │               │  │               │  │               │   │
+│  │    Kernel     │  │ Probabilistic │  │   Hardware    │  │   Unified     │   │
+│  │  Fingerprint  │  │  Attribution  │  │    Digital    │  │    Trace      │   │
+│  │    Engine     │  │    Engine     │  │     Twin      │  │     Lake      │   │
+│  │               │  │               │  │               │  │               │   │
+│  │  • Family     │  │  • KAR Score  │  │  • HEU Score  │  │  • Parquet    │   │
+│  │    Classify   │  │  • PFI Score  │  │  • Microbench │  │  • Perfetto   │   │
+│  │  • Counter    │  │  • LTS Score  │  │  • Calibrate  │  │  • Cross-ref  │   │
+│  │    Signature  │  │  • Graph Map  │  │               │  │               │   │
+│  │               │  │               │  │               │  │               │   │
+│  └───────────────┘  └───────────────┘  └───────────────┘  └───────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ MEASUREMENT LAYER                                                               │
+│                                                                                 │
+│  ┌─────────────────────────────────┐  ┌─────────────────────────────────────┐ │
+│  │                                 │  │                                     │ │
+│  │        Laboratory Mode          │  │       eBPF Forensic Tracer          │ │
+│  │                                 │  │                                     │ │
+│  │  • cgroups v2 Isolation         │  │  • Scheduler Interference (SII)     │ │
+│  │  • CPU Core Pinning             │  │  • Fault Penalty Index (FPI)        │ │
+│  │  • NUMA Memory Binding          │  │  • Context Switch Tracking          │ │
+│  │  • GPU Clock Locking            │  │  • Cache Miss Events                │ │
+│  │  • IRQ Affinity Control         │  │                                     │ │
+│  │                                 │  │                                     │ │
+│  └─────────────────────────────────┘  └─────────────────────────────────────┘ │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ COLLECTION LAYER                                                                │
+│                                                                                 │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐   │
+│  │               │  │               │  │               │  │               │   │
+│  │  ORT Runner   │  │   rocprof     │  │    System     │  │     GPU       │   │
+│  │               │  │   Wrapper     │  │    Sampler    │  │    Sampler    │   │
+│  │  • MIGraphX   │  │               │  │               │  │               │   │
+│  │  • ROCm EP    │  │  • HIP Trace  │  │  • CPU Load   │  │  • Clocks     │   │
+│  │  • CUDA EP    │  │  • HSA Trace  │  │  • Memory     │  │  • Power      │   │
+│  │  • CPU EP     │  │  • Counters   │  │  • Context    │  │  • Temp       │   │
+│  │               │  │               │  │               │  │               │   │
+│  └───────────────┘  └───────────────┘  └───────────────┘  └───────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ INFRASTRUCTURE LAYER                                                            │
+│                                                                                 │
+│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐     │
+│  │                     │  │                     │  │                     │     │
+│  │   Session Manager   │  │     Data Schema     │  │      Utilities      │     │
+│  │                     │  │                     │  │                     │     │
+│  │  • Lifecycle        │  │  • Type-safe        │  │  • High-res timing  │     │
+│  │  • Artifact Store   │  │  • Dataclasses      │  │  • Subprocess mgmt  │     │
+│  │  • Environment      │  │  • Parquet Schema   │  │  • /proc readers    │     │
+│  │                     │  │                     │  │                     │     │
+│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘     │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ EXTERNAL DEPENDENCIES                                                           │
+│                                                                                 │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐   │
+│  │               │  │               │  │               │  │               │   │
+│  │ ONNX Runtime  │  │    rocprof    │  │   rocm-smi    │  │    Linux      │   │
+│  │               │  │               │  │               │  │    Kernel     │   │
+│  │  MIGraphX EP  │  │  GPU Profiler │  │   Telemetry   │  │  eBPF/proc    │   │
+│  │               │  │               │  │               │  │               │   │
+│  └───────────────┘  └───────────────┘  └───────────────┘  └───────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Component Architecture
+---
 
-### 1. Core Layer (`aaco/core/`)
-
-#### Session Manager
-- Creates unique session IDs (timestamp + UUID)
-- Manages session folders and artifact lifecycle
-- Captures environment "lockbox" (pip freeze, env vars, config)
-- Provides artifact save/load with compression support
-
-#### Data Schema
-- 20+ dataclasses defining all AACO data structures
-- Type-safe representation of:
-  - Session metadata
-  - Inference results
-  - Kernel executions
-  - GPU/System samples
-  - Bottleneck classifications
-  - Regression verdicts
-
-#### Utilities
-- High-resolution timing (monotonic nanoseconds)
-- Subprocess execution with timeout
-- /proc filesystem readers
-- Data format conversion helpers
-
-### 2. Data Collection Layer
-
-#### Inference Runner (`aaco/runner/`)
-- **ORTRunner**: ONNX Runtime execution with multi-backend support
-  - Backends: MIGraphXExecutionProvider, ROCMExecutionProvider, CUDAExecutionProvider, CPUExecutionProvider
-  - Automatic input shape detection and dummy data generation
-  - Separate warmup and measurement phases
-  - Per-iteration latency capture
-
-- **Model Registry**: Model configuration management
-  - Input shape overrides
-  - Backend-specific optimizations
-  - Batch size handling
-
-#### Profiler (`aaco/profiler/`)
-- **RocprofWrapper**: GPU kernel profiling
-  - Runs workloads under rocprof
-  - Configurable tracing options (HIP, HSA, system)
-  - Output file management
-
-- **RocprofParser**: Trace analysis
-  - Parses rocprof CSV output
-  - Computes per-kernel statistics
-  - Generates kernel summaries
-
-#### Collectors (`aaco/collectors/`)
-- **SystemSampler**: Background thread sampling from /proc
-  - CPU utilization
-  - Memory (RSS)
-  - Context switches
-  - Page faults
-  - Load average
-
-- **ROCmSMISampler**: GPU telemetry via rocm-smi
-  - GPU/Memory utilization
-  - Power consumption
-  - Temperature
-  - Clock frequencies
-  - VRAM usage
-
-- **ClockMonitor**: CPU/GPU governor state
-  - Scaling governor readings
-  - Performance mode validation
-  - Clock stability tracking
-
-### 3. Analytics Layer (`aaco/analytics/`)
-
-#### Derived Metrics Engine
-- Computes phase-specific statistics
-- Combines multiple data sources into unified metrics
-- Calculates efficiency ratios:
-  - **GPU Active Ratio**: Kernel time / Wall time
-  - **KAR**: Kernel count / ONNX node count
-  - **Microkernel %**: Percentage of sub-10μs kernels
-
-#### Bottleneck Classifier
-- Rule-based classification with weighted indicators
-- Categories:
-  - Compute Bound
-  - Memory Bound
-  - Launch Overhead
-  - CPU Bound
-  - Thermal Throttle
-  - Frequency Scaling
-  - Warmup Instability
-- Generates evidence and recommendations
-
-#### Regression Detector
-- A/B session comparison
-- Statistical significance testing (Welch's t-test)
-- Threshold-based verdict (regression/improvement/neutral)
-
-### 4. Presentation Layer
-
-#### CLI (`aaco/cli.py`)
-Commands:
-- `aaco run`: Execute benchmark session
-- `aaco diff`: Compare two sessions
-- `aaco report`: Generate session report
-- `aaco ls`: List recent sessions
-- `aaco info`: Display system information
-
-#### Report Renderer (`aaco/report/`)
-- Terminal: Colored text output
-- HTML: Jinja2-based rich reports
-- JSON: Structured data export
-
-## Data Flow
+## Data Flow Architecture
 
 ```
-1. Session Initialization
-   └── Create session folder
-   └── Capture environment lockbox
-   
-2. Warmup Phase
-   └── Run N warmup iterations
-   └── Collect latencies (but don't include in stats)
-   
-3. Measurement Phase
-   └── Start telemetry collectors (background threads)
-   └── Run M measurement iterations
-   └── Capture per-iteration latency
-   └── Stop telemetry collectors
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              DATA FLOW PIPELINE                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
 
-4. Optional: Kernel Profiling
-   └── Re-run with rocprof wrapper
-   └── Parse kernel traces
-   └── Compute kernel metrics
-
-5. Metrics Computation
-   └── Aggregate inference results
-   └── Compute derived metrics
-   └── Classify bottleneck
-
-6. Artifact Storage
-   └── Save all data as JSON
-   └── Optional Parquet export
-   └── Generate HTML report
-
-7. Regression Analysis (optional)
-   └── Load baseline session
-   └── Compare metrics
-   └── Statistical significance test
-   └── Generate verdict
+    ┌─────────────┐
+    │             │
+    │ ONNX Model  │
+    │             │
+    └──────┬──────┘
+           │
+           ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                      GRAPH ANALYSIS                              │
+    │                                                                  │
+    │   Model Loading ──► Node Extraction ──► Partition Mapping       │
+    │                                                                  │
+    │   Output: graph_nodes.parquet, graph_edges.parquet              │
+    └─────────────────────────────────────────────────────────────────┘
+           │
+           ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                   DETERMINISTIC EXECUTION                        │
+    │                                                                  │
+    │   Laboratory Setup ──► Warmup Phase ──► Measurement Phase       │
+    │                                                                  │
+    │   Output: inference_iters.parquet, inference_summary.json       │
+    └─────────────────────────────────────────────────────────────────┘
+           │
+           ├───────────────────┬───────────────────┬──────────────────┐
+           ▼                   ▼                   ▼                  ▼
+    ┌─────────────┐     ┌─────────────┐     ┌─────────────┐    ┌─────────────┐
+    │   rocprof   │     │   System    │     │    GPU      │    │    eBPF     │
+    │   Tracing   │     │   Sampling  │     │   Sampling  │    │   Tracing   │
+    │             │     │             │     │             │    │             │
+    │ Kernel exec │     │  CPU, Mem   │     │ Clocks, Pwr │    │  Scheduler  │
+    └──────┬──────┘     └──────┬──────┘     └──────┬──────┘    └──────┬──────┘
+           │                   │                   │                  │
+           └───────────────────┴───────────────────┴──────────────────┘
+                                       │
+                                       ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                      UNIFIED TRACE LAKE                          │
+    │                                                                  │
+    │   Parquet Storage ──► Cross-Reference ──► Perfetto Export       │
+    │                                                                  │
+    │   Schema: TimestampNs, EventType, Duration, Metadata            │
+    └─────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                     ATTRIBUTION ENGINE                           │
+    │                                                                  │
+    │   Graph→Kernel Mapping ──► KAR/PFI/LTS Scoring ──► Grouping    │
+    │                                                                  │
+    │   Output: kernel_groups.parquet, op_to_kernel_map.parquet       │
+    └─────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                   BOTTLENECK CLASSIFICATION                      │
+    │                                                                  │
+    │   Feature Extraction ──► Rule Engine ──► Confidence Scoring    │
+    │                                                                  │
+    │   Categories: Launch-bound, CPU-bound, Memory-bound,            │
+    │               Compute-bound, Thermal-throttled                   │
+    └─────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                   STATISTICAL GOVERNANCE                         │
+    │                                                                  │
+    │   EWMA Detection ──► CUSUM Analysis ──► Baseline Comparison     │
+    │                                                                  │
+    │   Output: drift_status, change_points, regression_verdict       │
+    └─────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    ROOT CAUSE ANALYSIS                           │
+    │                                                                  │
+    │   Evidence Collection ──► Bayesian Inference ──► RCPP Ranking  │
+    │                                                                  │
+    │   Output: suspected_cause, posterior_probability, evidence      │
+    └─────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    REPORT GENERATION                             │
+    │                                                                  │
+    │   Template Rendering ──► Visualization ──► Export               │
+    │                                                                  │
+    │   Formats: HTML, JSON, Terminal, Perfetto                       │
+    └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Session Bundle Structure
+---
+
+## Module Structure
 
 ```
-sessions/
-└── 20240115_143022_abc123/
-    ├── session_meta.json      # Session metadata
-    ├── environment.json       # pip freeze, env vars
-    ├── inference_results.json # Per-iteration latencies
-    ├── derived_metrics.json   # Computed metrics
-    ├── bottleneck.json        # Classification result
-    ├── kernel_summary.json    # Top kernel stats
-    ├── sys_samples.json       # System telemetry
-    ├── gpu_samples.json       # GPU telemetry
-    ├── clock_state.json       # Governor/clock info
-    └── report.html            # Generated report
+aaco/
+├── core/                    # Infrastructure and session management
+│   ├── session.py           # Session lifecycle management
+│   ├── schema.py            # Data structures and type definitions
+│   └── utils.py             # Common utilities
+│
+├── collectors/              # Data collection subsystem
+│   ├── rocm_smi_sampler.py  # GPU telemetry collection
+│   ├── sys_sampler.py       # System metrics collection
+│   ├── clocks.py            # Clock management
+│   └── driver_interface.py  # Low-level driver access
+│
+├── profiler/                # GPU profiling subsystem
+│   └── rocprof_wrapper.py   # rocprof integration
+│
+├── analytics/               # Analysis and diagnostics
+│   ├── classify.py          # Bottleneck classification
+│   ├── metrics.py           # Derived metrics computation
+│   ├── attribution.py       # Graph-to-kernel attribution
+│   ├── root_cause.py        # Bayesian root cause analysis
+│   ├── regression_guard.py  # Statistical regression detection
+│   └── recommendation_engine.py
+│
+├── governance/              # Fleet and regression governance
+├── laboratory/              # Deterministic execution environment
+├── calibration/             # Hardware calibration subsystem
+├── tracelake/               # Unified trace storage
+├── report/                  # Report generation
+├── dashboard/               # Real-time monitoring
+└── cli.py                   # Command-line interface
 ```
 
-## Extension Points
+---
 
-1. **New Backends**: Add new execution providers in `ort_runner.py`
-2. **New Collectors**: Implement `start()/stop()/get_samples()` interface
-3. **New Classifiers**: Extend `BottleneckClassifier` with additional rules
-4. **New Report Formats**: Add renderer methods to `ReportRenderer`
-5. **Custom Metrics**: Extend `DerivedMetricsEngine` with domain-specific calculations
+## Key Design Principles
+
+### Deterministic Measurement
+
+All measurements are designed for reproducibility:
+- Configurable warmup iterations to reach steady state
+- Statistical aggregation over measurement iterations
+- Environment capture for reproducibility verification
+- Isolation mechanisms to minimize interference
+
+### Cross-Layer Attribution
+
+Performance data is correlated across execution layers:
+- ONNX graph nodes map to MIGraphX partitions
+- Partitions map to HIP kernel launches
+- Kernel execution correlates with hardware counters
+- System events provide context for anomalies
+
+### Statistical Rigor
+
+All comparisons use statistically sound methods:
+- Robust baseline computation using median/MAD
+- EWMA for drift detection with configurable sensitivity
+- CUSUM for change point detection
+- Confidence intervals for all reported metrics
+
+### Extensibility
+
+The architecture supports extension:
+- Pluggable collectors for new data sources
+- Modular analytics for new classification rules
+- Template-based reporting for custom formats
+- API access for integration with external systems
+
+---
+
+## Hardware Requirements
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| GPU | AMD Instinct MI100 | AMD Instinct MI300X |
+| ROCm | 5.6+ | 6.0+ |
+| Memory | 32GB | 64GB+ |
+| Storage | SSD 100GB | NVMe 500GB+ |
+
+---
+
+## Performance Characteristics
+
+| Operation | Typical Duration | Notes |
+|-----------|-----------------|-------|
+| Model load | 1-10s | Depends on model size |
+| Warmup | 5-30s | Configurable iterations |
+| Measurement | 10-60s | Configurable iterations |
+| rocprof trace | +20-50% overhead | Profiling adds overhead |
+| Report generation | 1-5s | Depends on data volume |
+
+---
+
+## Related Documentation
+
+- [Methodology](methodology.md) - Measurement methodology details
+- [Data Schema](data_schema.md) - Complete data schema reference
+- [Bottleneck Taxonomy](bottleneck_taxonomy.md) - Classification rules
