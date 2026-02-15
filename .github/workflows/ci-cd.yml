@@ -81,8 +81,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.10"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        exclude:
+          - os: macos-latest
+            python-version: "3.12"
     
     steps:
       - uses: actions/checkout@v4
@@ -100,20 +103,7 @@ jobs:
           pip install -e . --no-deps
 
       - name: Run unit tests
-        continue-on-error: true
-        id: tests
-        run: |
-          echo "=== Running tests ==="
-          python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml || echo "Tests exited with code $?"
-      
-      - name: Check test results
-        run: |
-          echo "=== Test Results ==="
-          cat junit.xml || echo "No junit.xml found"
-          echo "=== Step outcome: ${{ steps.tests.outcome }} ==="
-          if [ "${{ steps.tests.outcome }}" = "failure" ]; then
-            exit 1
-          fi
+        run: python -m pytest tests/unit/ -v --tb=short --junitxml=junit.xml
       
       - name: Upload test results
         if: always()
