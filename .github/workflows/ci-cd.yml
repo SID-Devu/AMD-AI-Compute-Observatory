@@ -99,17 +99,26 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov click rich numpy pandas pyarrow pyyaml jinja2 psutil matplotlib seaborn
-          pip install -e .
+          pip install -e ".[dev]"
+      
+      - name: Show installed packages
+        run: pip list
       
       - name: Verify package installation
         run: |
-          python -c "import aaco; print('aaco imported successfully')"
+          python -c "import aaco; print('aaco version:', getattr(aaco, '__version__', 'unknown'))"
           python -c "from aaco.cli import cli; print('cli imported successfully')"
+          python -c "from aaco.core import Session; print('Session imported successfully')"
       
       - name: Run unit tests
         run: |
-          pytest tests/unit/ -v --tb=short --junitxml=junit.xml
+          python -m pytest tests/unit/ -v --tb=long -x --junitxml=junit.xml 2>&1
+      
+      - name: Show test summary
+        if: always()
+        run: |
+          echo "=== Test Results ==="
+          cat junit.xml || echo "No junit.xml found"
       
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'

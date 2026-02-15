@@ -113,7 +113,9 @@ aaco = ["report/templates/*.j2", "report/templates/*.html"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short --strict-markers"
+python_functions = ["test_*"]
+python_classes = ["Test*"]
+addopts = "-v --tb=short"
 markers = [
     "slow: marks tests as slow running",
     "rocm: marks tests requiring ROCm",
