@@ -99,16 +99,21 @@ jobs:
           pip install pytest pytest-cov numpy pandas pyarrow pyyaml jinja2 click rich psutil matplotlib seaborn
           pip install -e . --no-deps
 
-      - name: Debug - collect tests only
-        continue-on-error: true
-        run: python -m pytest tests/unit/ --collect-only 2>&1
-      
       - name: Run unit tests
-        run: python -m pytest tests/unit/ -v --tb=short --junitxml=junit.xml
+        continue-on-error: true
+        id: tests
+        run: |
+          echo "=== Running tests ==="
+          python -m pytest tests/unit/ -v --tb=long --junitxml=junit.xml || echo "Tests exited with code $?"
       
-      - name: Show junit.xml
-        if: always()
-        run: cat junit.xml || echo "No junit.xml found"
+      - name: Check test results
+        run: |
+          echo "=== Test Results ==="
+          cat junit.xml || echo "No junit.xml found"
+          echo "=== Step outcome: ${{ steps.tests.outcome }} ==="
+          if [ "${{ steps.tests.outcome }}" = "failure" ]; then
+            exit 1
+          fi
       
       - name: Upload test results
         if: always()
