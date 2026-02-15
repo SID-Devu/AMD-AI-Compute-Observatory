@@ -1,9 +1,9 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software in your research, please cite it as below."
 type: software
 title: "AMD AI Compute Observatory"
 version: "1.0.0"
-date-released: 2026-02-15
+date-released: "2026-02-15"
 url: "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
 repository-code: "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
 license: MIT
@@ -11,18 +11,36 @@ authors:
   - family-names: "Devu"
     given-names: "Sudheer Ibrahim Daniel"
     email: "sudheerdevu4work@gmail.com"
-    orcid: ""
+    affiliation: "Independent Researcher"
+identifiers:
+  - type: url
+    value: "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
+    description: "GitHub Repository"
 keywords:
   - performance-analysis
   - gpu-profiling
-  - amd
+  - amd-instinct
   - rocm
-  - inference
+  - inference-optimization
   - observability
   - machine-learning
-abstract: >
-  AMD AI Compute Observatory (AACO) is a performance analysis and observability
-  platform for AI inference workloads on AMD Instinct accelerators. The platform
-  provides deterministic measurement capabilities, cross-layer observability from
-  ONNX graphs to HIP kernels, and automated bottleneck classification with
-  statistical regression detection.
+  - artificial-intelligence
+  - onnx-runtime
+  - regression-detection
+  - bottleneck-analysis
+abstract: >-
+  AMD AI Compute Observatory (AACO) is an open-source performance analysis and 
+  observability platform for AI inference workloads on AMD Instinct accelerators.
+  The platform provides deterministic measurement capabilities, cross-layer 
+  observability from ONNX graphs to HIP kernels, automated bottleneck classification,
+  and statistical regression detection with EWMA/CUSUM governance.
+preferred-citation:
+  type: software
+  authors:
+    - family-names: "Devu"
+      given-names: "Sudheer Ibrahim Daniel"
+      email: "sudheerdevu4work@gmail.com"
+  title: "AMD AI Compute Observatory"
+  version: "1.0.0"
+  year: 2026
+  url: "https://github.com/SID-Devu/AMD-AI-Compute-Observatory"
