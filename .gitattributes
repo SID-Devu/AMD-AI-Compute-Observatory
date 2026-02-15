@@ -1,0 +1,29 @@
+# GitHub Linguist overrides
+# Exclude generated files from language statistics
+
+# Generated documentation (MkDocs output)
+site/** linguist-generated=true
+site/**/*.html linguist-generated=true
+site/**/*.js linguist-generated=true
+site/**/*.css linguist-generated=true
+
+# Report templates are source code, not generated
+aaco/report/templates/*.html linguist-vendored=false
+
+# Ensure Python is detected correctly
+*.py linguist-detectable=true
+aaco/**/*.py linguist-detectable=true
+
+# C/C++ kernel code
+*.c linguist-detectable=true
+*.h linguist-detectable=true
+*.cpp linguist-detectable=true
+*.hpp linguist-detectable=true
+kernel/**/*.c linguist-detectable=true
+driver/**/*.c linguist-detectable=true
+
+# eBPF code
+ebpf/**/*.c linguist-detectable=true
+
+# Makefiles
+Makefile linguist-detectable=true
